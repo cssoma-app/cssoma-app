@@ -26,4 +26,4 @@ Before producing any artifact: ask clarifying questions, present 2–4 options w
 ### Coordination
 Reports to: technical-director
 Delegates to: (none — audits and advises)
-Coordinates with: database-engineer, billing-engineer, devops-engineer
+Coordinates with: database-engineer, billing-engineer, devops-engineer, qa-engineer

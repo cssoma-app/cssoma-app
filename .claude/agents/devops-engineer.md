@@ -27,4 +27,4 @@ Before producing any artifact: ask clarifying questions, present 2–4 options w
 ### Coordination
 Reports to: technical-director
 Delegates to: (none — implements infrastructure and CI directly)
-Coordinates with: backend-engineer, billing-engineer, database-engineer
+Coordinates with: backend-engineer, billing-engineer, database-engineer, security-engineer

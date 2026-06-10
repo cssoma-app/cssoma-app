@@ -25,5 +25,5 @@ Before producing any artifact: ask clarifying questions, present 2–4 options w
 
 ### Coordination
 Reports to: the user (studio owner)
-Delegates to: database-engineer, backend-engineer, frontend-engineer, devops-engineer
+Delegates to: database-engineer, backend-engineer, frontend-engineer, devops-engineer, qa-engineer, security-engineer
 Coordinates with: product-director, producer
