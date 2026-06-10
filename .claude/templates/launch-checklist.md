@@ -5,6 +5,7 @@
 - [ ] `.env.example` present with placeholder values only
 - [ ] Row Level Security enabled and verified on all tenant data tables
 - [ ] Service-role key is server-only; not exposed to client bundles
+- [ ] Security audit PASS (no open High/Critical in docs/specs/security-audit.md)
 
 ## Billing
 - [ ] Stripe live-mode keys configured in production environment
@@ -31,6 +32,10 @@
 - [ ] Rollback plan documented (previous deployment or feature flag)
 - [ ] Database migration rollback script tested
 - [ ] On-call runbook accessible to the team
+
+## Tests
+- [ ] Unit/integration suite green (Vitest)
+- [ ] Critical-path e2e green (Playwright)
 
 ---
 
