@@ -3,7 +3,7 @@
 # (e.g. /studio-status, /start) may call it, or run it manually for a gap check.
 set -uo pipefail
 missing=0
-for f in idea-validation prd architecture data-model pricing launch-checklist; do
+for f in idea-validation prd architecture data-model pricing launch-checklist qa-plan security-audit; do
   if [ ! -f "docs/specs/$f.md" ]; then echo "GAP: docs/specs/$f.md missing"; missing=1; fi
 done
 [ "$missing" = 0 ] && echo "No gaps: core artifacts present."
