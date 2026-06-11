@@ -1,5 +1,5 @@
 ## Applies to
-`**/*.test.*`, `**/*.spec.*`, `tests/**`, `e2e/**`
+`**/*.test.*`, `**/*.spec.*`, `tests/**`, `e2e/**`, `**/__tests__/**`
 
 ## Standards
 - MUST keep tests deterministic: no real network calls, no live API keys, no real Stripe/Supabase secrets.

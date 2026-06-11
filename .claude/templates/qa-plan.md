@@ -28,7 +28,7 @@
 |-------|--------|
 | Unit (statements) | <e.g. 80%> |
 | Integration (critical paths) | <e.g. 100% of RLS policies> |
-| E2E (happy paths) | <e.g. sign-up, upgrade, core feature> |
+| E2E (happy paths) | <e.g. 3 critical journeys — all green in CI> |
 
 ## Out of scope
 

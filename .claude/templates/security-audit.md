@@ -2,7 +2,7 @@
 
 ## Scope
 
-<diff | full>
+**Scope:** <diff or full>
 
 <Briefly describe what code, routes, or modules are in scope for this audit.>
 

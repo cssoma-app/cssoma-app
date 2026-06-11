@@ -29,6 +29,8 @@ Events that MUST be logged (who, what, when, outcome):
 - Billing events: plan upgrade/downgrade, payment failure, invoice created
 - Admin events: role changes, tenant creation/deletion, data exports
 
+Log schema MUST include: tenant_id, actor_id, action, outcome, timestamp. The table MUST be append-only (no UPDATE/DELETE for tenant roles).
+
 Log storage: <e.g. Supabase audit_logs table, retained 90 days>
 
 ## Verdict
