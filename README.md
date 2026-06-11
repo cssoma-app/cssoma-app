@@ -38,7 +38,7 @@ A production-ready, batteries-included SaaS starter stack — fully swappable (s
 ## Quick start
 
 ```bash
-git clone https://github.com/<your-org>/Claude-Code-SaaS-Studio my-saas  # replace <your-org> with your fork/repo URL
+git clone https://github.com/evgenii-studitskikh/Claude-Code-SaaS-Studio my-saas
 cd my-saas
 claude
 ```
