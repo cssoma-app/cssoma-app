@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGA & SST Consultoría | Seguridad, Salud y Ambiente en Colombia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #0F4C75; /* Azul corporativo */
+            --secondary-blue: #3282B8;
+            --env-green: #2BB380; /* Verde ambiental */
+            --sst-orange: #F2994A; /* Naranja seguridad */
+            --dark-bg: #1B262C;
+            --light-bg: #F7F9FB;
+        }
+
+        * {
+            font-family: 'Poppins', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--light-bg);
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+        }
+
+        p, li, a {
+            font-family: 'Roboto', sans-serif;
+        }
+
+        /* Animaciones suaves al hacer scroll */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s ease-out;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Hero Background */
+        .hero-bg {
+            background: linear-gradient(135deg, rgba(15, 76, 117, 0.95) 0%, rgba(43, 179, 128, 0.85) 100%), url('https://images.unsplash.com/photo-1518349619113-03114f06ac3a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary {
+            background-color: var(--sst-orange);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(242, 153, 74, 0.4);
+        }
+
+        .btn-primary:hover {
+            background-color: #e6843a;
+            transform: scale(1.05);
+        }
+
+        .btn-outline {
+            border: 2px solid white;
+            color: white;
+            padding: 10px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline:hover {
+            background-color: white;
+            color: var(--primary-blue);
+        }
+
+        .section-title {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: -10px;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(to right, var(--secondary-blue), var(--env-green));
+            border-radius: 2px;
+        }
+
+        .nav-link {
+            position: relative;
+            font-weight: 500;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            display: block;
+            margin-top: 4px;
+            right: 0;
+            background: var(--env-green);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+            left: 0;
+            background: var(--env-green);
+        }
+
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Navbar -->
+    <header id="navbar" class="fixed top-0 left-0 w-full bg-white shadow-md z-50 transition-all duration-300">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br from-[var(--primary-blue)] to-[var(--env-green)]">
+                    <i class="fas fa-shield-alt text-white text-xl"></i>
+                </div>
+                <span class="text-xl font-bold text-[var(--primary-blue)]">SGA<span class="text-[var(--env-green)]">&SST</span></span>
+            </div>
+            <ul class="hidden md:flex space-x-8 items-center">
+                <li><a href="#inicio" class="nav-link text-gray-600 hover:text-[var(--primary-blue)]">Inicio</a></li>
+                <li><a href="#nosotros" class="nav-link text-gray-600 hover:text-[var(--primary-blue)]">Enfoque Pymes</a></li>
+                <li><a href="#servicios" class="nav-link text-gray-600 hover:text-[var(--primary-blue)]">Servicios</a></li>
+                <li><a href="#software" class="nav-link text-gray-600 hover:text-[var(--primary-blue)]">Software</a></li>
+                <li><a href="#contacto" class="btn-primary text-sm">Contacto</a></li>
+            </ul>
+            <button class="md:hidden text-2xl text-[var(--primary-blue)]"><i class="fas fa-bars"></i></button>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="inicio" class="hero-bg min-h-screen flex items-center justify-center text-white pt-20">
+        <div class="container mx-auto px-6 text-center reveal">
+            <span class="inline-block bg-[var(--sst-orange)] text-white px-4 py-1 rounded-full text-sm font-semibold mb-6 shadow-lg">
+                Especialistas en Colombia
+            </span>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">
+                Consultoría en Seguridad, Salud en el Trabajo<br>
+                <span class="text-[var(--env-green)]">e Ingeniería Ambiental</span>
+            </h1>
+            <p class="text-lg md:text-xl max-w-3xl mx-auto mb-10 text-blue-50 font-light">
+                Implementamos Sistemas de Gestión bajo los estándares ISO 45001 e ISO 14001. 
+                Protegemos a tu equipo, optimizamos tus procesos y aseguramos el cumplimiento legal de tu empresa.
+            </p>
+            <div class="flex flex-col md:flex-row gap-4 justify-center">
+                <a href="#contacto" class="btn-primary">Agenda una Diagnóstico Inicial</a>
+                <a href="#servicios" class="btn-outline">Ver Portafolio</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Focus SMEs Section -->
+    <section id="nosotros" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-3xl md:text-4xl font-bold text-[var(--primary-blue)] section-title">
+                    Enfocados en el éxito de las Pymes
+                </h2>
+                <p class="max-w-2xl mx-auto text-gray-600 mt-8">
+                    Sabemos que las pequeñas y medianas empresas enfrentan retos únicos. Ofrecemos soluciones prácticas, escalables y económicamente viables para que cumplas con la normatividad colombiana sin afectar tu productividad.
+                </p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center p-6 reveal">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-50 flex items-center justify-center text-[var(--secondary-blue)] text-2xl">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Cumplimiento Legal</h3>
+                    <p class="text-gray-500">Resolución 0312 de 2019 y normativa ambiental vigente en Colombia al día.</p>
+                </div>
+                <div class="text-center p-6 reveal">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-50 flex items-center justify-center text-[var(--env-green)] text-2xl">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Sostenibilidad Real</h3>
+                    <p class="text-gray-500">Minimizamos riesgos ambientales y promovemos una cultura de prevención.</p>
+                </div>
+                <div class="text-center p-6 reveal">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-50 flex items-center justify-center text-[var(--sst-orange)] text-2xl">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Mejora Continua</h3>
+                    <p class="text-gray-500">Implementamos el ciclo PHVA para garantizar eficiencia operativa.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Portfolio -->
+    <section id="servicios" class="py-20 bg-[var(--light-bg)]">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-3xl md:text-4xl font-bold text-[var(--primary-blue)] section-title">
+                    Nuestro Portafolio de Servicios
+                </h2>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-10">
+                <!-- SST Column -->
+                <div class="glass-card rounded-2xl p-8 shadow-sm reveal">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 bg-[var(--sst-orange)] rounded-lg flex items-center justify-center text-white text-xl mr-4">
+                            <i class="fas fa-hard-hat"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-[var(--primary-blue)]">Seguridad y Salud en el Trabajo (SST)</h3>
+                    </div>
+                    <ul class="space-y-4 text-gray-600">
+                        <li class="flex items-start"><i class="fas fa-check-circle text-[var(--sst-orange)] mt-1 mr-3"></i> <span><strong>SG-SST:</strong> Diagnóstico inicial, evaluación de estándares mínimos, diseño, implementación, administración y auditoría.</span></li>
+                        <li class="flex items-start"><i class="fas fa-check-circle text-[var(--sst-orange)] mt-1 mr-3"></i> <span><strong>PESV:</strong> Plan Estratégico de Seguridad Vial.</span></li>
+                        <li class="flex items-start"><i class="fas fa-check-circle text-[var(--sst-orange)] mt-1 mr-3"></i> <span><strong>SGA Químico:</strong> Implementación del Sistema Globalmente Armonizado.</span></li>
+                        <li class="flex items-start"><i class="fas fa-check-circle text-[var(--sst-orange)] mt-1 mr-3"></i> <span><strong>Especialización en Tareas Críticas:</strong> Trabajos en caliente, alturas, espacios confinados e izaje de cargas.</span></li>
+                    </ul>
+                </div>
+
+                <!-- Environmental Column -->
+                <div class="glass-card rounded-2xl p-8 shadow-sm reveal">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 bg-[var(--env-green)] rounded-lg flex items-center justify-center text-white text-xl mr-4">
+                            <i class="fas fa-globe-americas"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-[var(--primary-blue)]">Ingeniería Ambiental</h3>
+                    </div>
+                    <ul class="space-y-4 text-gray-600">
+                        <li class="flex items-start"><i class="fas fa-check-circle text-[var(--env-green)] mt-1 mr-3"></i> <span><strong>SG Ambiental:</strong> Diseño bajo el ciclo PHVA.</span></li>
+                        <li class="flex items-start"><i class="fas fa-check-circle text-[var(--env-green)] mt-1 mr-3"></i> <span><strong>Permisos Ambientales:</strong> DAA, Licencias ambientales, permisos de emisión y estudios ambientales.</span></li>
+                        <li class="flex items-start"><i class="fas fa-check-circle text-[var(--env-green)] mt-1 mr-3"></i> <span><strong>ISO 14001:</strong> Implementación y auditorías internas.</span></li>
+                        <li class="flex items-start"><i class="fas fa-check-circle text-[var(--env-green)] mt-1 mr-3"></i> <span><strong>Auditorías Internas:</strong> ISO 17020 (para laboratorios) e ISO 19011 (Sistemas de Gestión de Calidad).</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Software Section -->
+    <section id="software" class="py-20 bg-[var(--dark-bg)] text-white">
+        <div class="container mx-auto px-6 flex flex-col md:flex-row items-center gap-12">
+            <div class="md:w-1/2 reveal">
+                <span class="text-[var(--env-green)] font-semibold uppercase tracking-wider text-sm">Gestión Tecnológica</span>
+                <h2 class="text-3xl md:text-4xl font-bold mt-4 mb-6">Software Integrado de SST y Medio Ambiente</h2>
+                <p class="text-gray-300 mb-8 leading-relaxed">
+                    Lleva tu sistema de gestión al siguiente nivel con nuestra plataforma digital. Centraliza la información, automatiza el cumplimiento y toma decisiones basadas en datos.
+                </p>
+                <ul class="space-y-4 mb-8">
+                    <li class="flex items-center"><i class="fas fa-cloud-upload-alt text-[var(--secondary-blue)] mr-4 text-xl"></i> Carga de soportes documentales en la nube.</li>
+                    <li class="flex items-center"><i class="fas fa-chart-pie text-[var(--env-green)] mr-4 text-xl"></i> Generación de gráficos dinámicos e indicadores de gestión (KPIs).</li>
+                    <li class="flex items-center"><i class="fas fa-tasks text-[var(--sst-orange)] mr-4 text-xl"></i> Administración de matrices legales y de riesgos.</li>
+                </ul>
+                <a href="#contacto" class="btn-primary">Solicitar Demostración</a>
+            </div>
+            <div class="md:w-1/2 reveal">
+                <!-- Mockup de software usando CSS -->
+                <div class="bg-white rounded-xl p-4 shadow-2xl">
+                    <div class="flex space-x-2 mb-4">
+                        <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                    </div>
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h4 class="text-gray-800 font-bold mb-4">Dashboard de Indicadores</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-white p-4 rounded shadow border-l-4 border-[var(--env-green)]">
+                                <p class="text-sm text-gray-500">Cumplimiento Ambiental</p>
+                                <p class="text-2xl font-bold text-gray-800">92%</p>
+                                <div class="w-full bg-gray-200 rounded h-1.5 mt-2">
+                                    <div class="bg-[var(--env-green)] h-1.5 rounded" style="width: 92%"></div>
+                                </div>
+                            </div>
+                            <div class="bg-white p-4 rounded shadow border-l-4 border-[var(--sst-orange)]">
+                                <p class="text-sm text-gray-500">Incidentabilidad SST</p>
+                                <p class="text-2xl font-bold text-gray-800">1.2%</p>
+                                <div class="w-full bg-gray-200 rounded h-1.5 mt-2">
+                                    <div class="bg-[var(--sst-orange)] h-1.5 rounded" style="width: 12%"></div>
+                                </div>
+                            </div>
+                            <div class="col-span-2 bg-white p-4 rounded shadow">
+                                <p class="text-sm text-gray-500 mb-2">Tareas Críticas Evaluadas</p>
+                                <div class="flex items-end space-x-2 h-20">
+                                    <div class="w-1/4 bg-blue-200 rounded-t" style="height: 40%"></div>
+                                    <div class="w-1/4 bg-blue-300 rounded-t" style="height: 70%"></div>
+                                    <div class="w-1/4 bg-blue-400 rounded-t" style="height: 50%"></div>
+                                    <div class="w-1/4 bg-[var(--secondary-blue)] rounded-t" style="height: 90%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action / Contact -->
+    <section id="contacto" class="py-20 bg-white">
+        <div class="container mx-auto px-6 max-w-4xl text-center">
+            <div class="reveal">
+                <i class="fas fa-comments text-5xl text-[var(--primary-blue)] mb-6"></i>
+                <h2 class="text-3xl md:text-4xl font-bold text-[var(--primary-blue)] mb-6">¿Estás listo para transformar tu empresa?</h2>
+                <p class="text-gray-600 mb-10 max-w-2xl mx-auto">
+                    Contáctanos hoy mismo. Ofrecemos una asesoría inicial gratuita para identificar el estado de tu empresa frente a los estándares ISO y normatividad colombiana.
+                </p>
+                
+                <form class="bg-[var(--light-bg)] p-8 rounded-2xl shadow-sm text-left grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="name">Nombre Completo</label>
+                        <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-[var(--env-green)]" id="name" type="text" placeholder="Juan Pérez">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="company">Empresa (Pyme)</label>
+                        <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-[var(--env-green)]" id="company" type="text" placeholder="Mi Empresa S.A.S">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="email">Correo Electrónico</label>
+                        <input class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-[var(--env-green)]" id="email" type="email" placeholder="juan@empresa.com">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="service">Servicio de Interés</label>
+                        <select class="shadow border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-[var(--env-green)]" id="service">
+                            <option>SG-SST (ISO 45001)</option>
+                            <option>Sistema de Gestión Ambiental (ISO 14001)</option>
+                            <option>Tareas Críticas</option>
+                            <option>Permisos Ambientales</option>
+                            <option>Software de Gestión</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2 text-center mt-4">
+                        <button type="submit" class="btn-primary w-full md:w-auto">Enviar Solicitud</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-[var(--dark-bg)] text-gray-400 py-10">
+        <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center space-x-2 mb-4 md:mb-0">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-br from-[var(--primary-blue)] to-[var(--env-green)]">
+                    <i class="fas fa-shield-alt text-white text-sm"></i>
+                </div>
+                <span class="text-lg font-bold text-white">SGA<span class="text-[var(--env-green)]">&SST</span> Consultores</span>
+            </div>
+            <div class="text-sm">
+                <p>&copy; 2023 Todos los derechos reservados. | Bogotá, Colombia</p>
+                <div class="flex space-x-4 mt-2 justify-center md:justify-end">
+                    <a href="#" class="hover:text-white transition">LinkedIn</a>
+                    <a href="#" class="hover:text-white transition">Instagram</a>
+                    <a href="#" class="hover:text-white transition">WhatsApp</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Script para animaciones al hacer scroll
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('shadow-lg');
+            } else {
+                navbar.classList.remove('shadow-lg');
+            }
+        });
+
+        const reveals = document.querySelectorAll('.reveal');
+
+        const revealOnScroll = () => {
+            const windowHeight = window.innerHeight;
+            const elementVisible = 100;
+
+            reveals.forEach((reveal) => {
+                const elementTop = reveal.getBoundingClientRect().top;
+                if (elementTop < windowHeight - elementVisible) {
+                    reveal.classList.add('active');
+                }
+            });
+        };
+
+        window.addEventListener('scroll', revealOnScroll);
+        // Trigger initial check
+        revealOnScroll();
+    </script>
+</body>
+</html>
