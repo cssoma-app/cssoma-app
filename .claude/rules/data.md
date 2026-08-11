@@ -1,9 +1,10 @@
 ## Applies to
-`**/supabase/**`, `**/db/**`, `**/migrations/**`, `lib/supabase/**`, `lib/db/**` (any file running Supabase queries).
+`**/backend/**/*.cs`, `**/DbContext/**`, `**/Models/**` (cualquier archivo de backend que interactúe con datos).
 
 ## Standards
-- MUST enable Row Level Security on every table holding tenant data.
-- MUST scope every query by tenant/org id; never trust a client-supplied tenant id.
-- MUST keep the Supabase service-role key server-only; never import it into client code.
-- SHOULD define policies alongside the table in a migration, not ad hoc.
-- SHOULD prefer `select` of explicit columns over `*` in app code.
+- MUST usar Entity Framework Core (EF Core) como ORM principal.
+- MUST habilitar Global Query Filters en el `DbContext` para asegurar que todas las consultas SQL estén aisladas por tenant (`TenantId`).
+- MUST scoped de inyección de dependencias para resolver el `TenantId` a partir del usuario autenticado (desde el JWT).
+- MUST crear migraciones de EF Core (`dotnet ef migrations add`) para cualquier cambio de esquema.
+- SHOULD usar Repositories o Services para encapsular la lógica de negocio y aislar los controladores del DbContext directamente.
+- MUST evitar consultas asíncronas bloqueantes (`.Result` o `.Wait()`). Siempre usar `await`.
