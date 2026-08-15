@@ -130,11 +130,45 @@ export default function LandingPage() {
                   </div>
                   <h3 className="text-3xl font-bold">Seguridad y Salud (SST)</h3>
                 </div>
-                <ul className="space-y-4 text-lg text-muted-foreground relative z-10 font-light">
-                  <li className="flex items-start"><CheckCircle2 className="mr-3 h-6 w-6 text-orange-500 shrink-0" /> <span><strong>SG-SST:</strong> Diagnóstico inicial, diseño, implementación y auditoría (Res 0312).</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="mr-3 h-6 w-6 text-orange-500 shrink-0" /> <span><strong>PESV:</strong> Plan Estratégico de Seguridad Vial.</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="mr-3 h-6 w-6 text-orange-500 shrink-0" /> <span><strong>SGA Químico:</strong> Sistema Globalmente Armonizado.</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="mr-3 h-6 w-6 text-orange-500 shrink-0" /> <span><strong>Tareas Críticas:</strong> Alturas, espacios confinados e izaje de cargas.</span></li>
+                <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-3 text-sm text-muted-foreground relative z-10 font-light">
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Diseño e implementación SG-SST (PYME Riesgo 1-3)</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Diseño e implementación SG-SST (Empresa Riesgo 4-5)</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Auditoría interna de cumplimiento SG-SST</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Elaboración y actualización de matriz de riesgos IPERC</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Investigación de accidentes de trabajo</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Acompañamiento SST</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Acompañamiento en tareas de alto riesgo (trabajos en caliente, alturas, espacios confinados, izaje)</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Implementación SG-SST</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>PESV (Plan Estratégico de Seguridad Vial)</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>SGA (Sistema Globalmente Armonizado)</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Capacitaciones</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Administración SG-SST</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Seguimiento y mejora continua del SG-SST</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Preparación para visitas del Ministerio de Trabajo</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Elaboración de planes de acción por incumplimientos</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Identificación de agentes químicos, físicos y biológicos, y coordinación de mediciones ambientales con laboratorios acreditados e interpretación de resultados</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Planes de intervención</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Procedimientos y manuales</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Programas de tareas críticas</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Permisos de trabajo</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Plan de emergencia para alturas</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Formación de brigadas</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Mapas de riesgos</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Análisis de riesgos por oficios</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Inspecciones planeadas</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Elaboración del plan anual de trabajo</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Indicadores de gestión</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Programas específicos</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Acompañamiento permanente mediante planes mensuales, anuales y por horas</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Programas de bienestar y prevención del estrés</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Aplicación de baterías de riesgo psicosocial</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Implementación del programa de riesgo psicosocial</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Gestión de contratistas</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Evaluaciones ergonómicas</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Actualización documental</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Auditoría</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Diagnóstico inicial y evaluación de estándares mínimos</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Acompañamiento mensual COPASST / Comité de Convivencia</span></li>
                 </ul>
               </div>
 
@@ -147,11 +181,18 @@ export default function LandingPage() {
                   </div>
                   <h3 className="text-3xl font-bold">Ingeniería Ambiental</h3>
                 </div>
-                <ul className="space-y-4 text-lg text-muted-foreground relative z-10 font-light">
-                  <li className="flex items-start"><CheckCircle2 className="mr-3 h-6 w-6 text-emerald-500 shrink-0" /> <span><strong>SG Ambiental:</strong> Diseño bajo el ciclo PHVA.</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="mr-3 h-6 w-6 text-emerald-500 shrink-0" /> <span><strong>Permisos Ambientales:</strong> Licencias, vertimientos y emisiones.</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="mr-3 h-6 w-6 text-emerald-500 shrink-0" /> <span><strong>ISO 14001:</strong> Implementación y auditorías internas.</span></li>
-                  <li className="flex items-start"><CheckCircle2 className="mr-3 h-6 w-6 text-emerald-500 shrink-0" /> <span><strong>Auditorías Internas:</strong> ISO 17020 (laboratorios) e ISO 19011.</span></li>
+                <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-3 text-sm text-muted-foreground relative z-10 font-light">
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-emerald-500 shrink-0" /> <span>Diagnóstico ambiental inicial (GAP Analysis ISO 14001)</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-emerald-500 shrink-0" /> <span>Diseño del sistema de gestión ambiental (ISO 14001)</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-emerald-500 shrink-0" /> <span>Matriz de requisitos legales ambientales</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-emerald-500 shrink-0" /> <span>Plan de manejo de residuos sólidos (PMRS)</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-emerald-500 shrink-0" /> <span>Auditoría interna ambiental ISO 14001</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-emerald-500 shrink-0" /> <span>Plan de manejo ambiental</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-emerald-500 shrink-0" /> <span>Autorizaciones ambientales</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-emerald-500 shrink-0" /> <span>Permisos ambientales</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-emerald-500 shrink-0" /> <span>Trámites ambientales</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-emerald-500 shrink-0" /> <span>Matriz de compatibilidad (riesgo químico)</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-emerald-500 shrink-0" /> <span>Mediciones ambientales</span></li>
                 </ul>
               </div>
             </div>
@@ -175,7 +216,7 @@ export default function LandingPage() {
                     </div>
                     <div>
                       <h4 className="text-xl font-bold mb-1">Importación Automática</h4>
-                      <p className="text-muted-foreground">Arrastra tus Excels históricos y estructuramos la información por ti.</p>
+                      <p className="text-muted-foreground">Arrastra tus históricos y estructuramos la información por ti.</p>
                     </div>
                   </div>
                   <div className="flex items-start">
