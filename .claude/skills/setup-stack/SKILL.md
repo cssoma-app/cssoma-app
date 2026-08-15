@@ -12,11 +12,11 @@ Bootstrap the decoupled SaaS Studio stack: Next.js App Router for frontend, ASP.
 
 ## Phases
 1. **Confirm prerequisites** — check that Node.js >= 18, `npm`/`pnpm`, y el `.NET SDK` (dotnet CLI) están disponibles. Si falta alguno, advertir al usuario.
-2. **Present the scaffold plan** — show the exact sequence of commands that will be run. For frontend: `npx create-next-app@latest frontend ...` and `npx shadcn@latest init`. For backend: `dotnet new webapi -n BackendAPI -o backend`.
+2. **Present the scaffold plan** — show the exact sequence of commands that will be run. For frontend: `npx create-next-app@latest frontend ...` and `npx shadcn@latest init`. For backend: `dotnet new webapi -n BackendAPI -o Backend`.
 3. **Run scaffold** — execute the approved commands with `Bash`. Stream output; stop and surface any error immediately.
 4. **Write `.env.example`** — create `.env.example` at the root and appsettings.json placeholders for the backend. Valores falsos, nunca secretos reales.
 5. **Verify the scaffold** — run `tsc --noEmit` on frontend and `dotnet build` on backend. If it fails, diagnose and propose a fix.
 6. **Next step** — point to `/design-architecture` or `/design-schema`.
 
 ## Output
-Project scaffold with separate `/frontend` and `/backend` directories. Runs no command and writes no file without explicit approval.
+Project scaffold with separate `/frontend` and `/Backend` directories. Runs no command and writes no file without explicit approval.

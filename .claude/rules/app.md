@@ -1,5 +1,5 @@
 ## Applies to
-`frontend/app/**`
+`frontend/src/app/**`
 
 ## Standards
 - MUST use Server Components by default and add `"use client"` only when interactivity requires it.
