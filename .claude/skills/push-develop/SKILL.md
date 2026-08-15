@@ -19,6 +19,9 @@ Cierra el loop de una tarea de desarrollo: sube lo pendiente a `origin/develop` 
 6. **Sync before push** — salvo `--no-pull`, `git fetch origin develop` y `git pull --rebase origin develop`. Si hay conflictos, detenerse y mostrarlos; no resolver automáticamente sin aprobación.
 7. **Push** — `git push origin develop` (agregar `-u` si no hay upstream configurado). `validate-push.sh` corre automáticamente y solo advierte (no bloquea) si la rama fuera `main`.
 8. **Report** — hash del commit, archivos incluidos, y confirmación de que `origin/develop` quedó actualizado. Si algo falla (hook, conflicto, rechazo del push), reportar la causa exacta y dejar el árbol de trabajo tal como quedó, sin reintentos destructivos.
+9. **Preguntar por el PR a main** — solo si el push a `develop` fue exitoso, preguntar con `AskUserQuestion` si se quiere abrir un Pull Request `develop → main` para completar el flujo de CI/CD. Nunca abrir un PR sin esta confirmación explícita, incluso si el usuario ya aprobó el push.
+   - Si dice que sí: intentar `gh pr create --base main --head develop --title "<resumen>" --repo cssoma-app/cssoma-app`. Si `gh` no está instalado o no está autenticado, generar la URL de comparación `https://github.com/cssoma-app/cssoma-app/compare/main...develop?expand=1` y abrirla en el navegador del usuario (`Start-Process` en PowerShell) para que la complete manualmente — nunca crear el PR por otra vía (API/token) sin que el usuario lo pida.
+   - Si dice que no: terminar ahí, sin más acción.
 
 ## Output
-Un commit en `develop` pusheado a `origin/develop`, o una parada clara con el motivo (rama incorrecta, hook bloqueó el commit, conflicto de merge, push rechazado) sin dejar estado a medias.
+Un commit en `develop` pusheado a `origin/develop`, o una parada clara con el motivo (rama incorrecta, hook bloqueó el commit, conflicto de merge, push rechazado) sin dejar estado a medias. Si se pidió, además un PR `develop → main` creado (o la URL de comparación abierta para crearlo manualmente).

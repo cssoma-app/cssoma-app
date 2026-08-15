@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
 const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-eval' 'unsafe-inline';
@@ -10,7 +12,7 @@ const cspHeader = `
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    connect-src 'self' http://localhost:5166 https://localhost:7057;
+    connect-src 'self' http://localhost:5166 https://localhost:7057${apiUrl ? ` ${apiUrl}` : ''};
     block-all-mixed-content;
     upgrade-insecure-requests;
 `.replace(/\s{2,}/g, ' ').trim();
