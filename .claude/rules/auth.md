@@ -1,5 +1,5 @@
 ## Applies to
-`**/backend/Controllers/**`, `**/frontend/app/**`, y cualquier archivo que maneje autenticación o llamadas a API.
+`**/Backend/Controllers/**`, `**/frontend/src/app/**`, y cualquier archivo que maneje autenticación o llamadas a API.
 
 ## Standards
 - MUST usar Supabase Auth en el cliente web (Next.js) para iniciar sesión y recuperar el JSON Web Token (JWT).

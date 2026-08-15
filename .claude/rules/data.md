@@ -1,5 +1,5 @@
 ## Applies to
-`**/backend/**/*.cs`, `**/DbContext/**`, `**/Models/**` (cualquier archivo de backend que interactúe con datos).
+`**/Backend/**/*.cs`, `**/DbContext/**`, `**/Models/**` (cualquier archivo de backend que interactúe con datos).
 
 ## Standards
 - MUST usar Entity Framework Core (EF Core) como ORM principal.

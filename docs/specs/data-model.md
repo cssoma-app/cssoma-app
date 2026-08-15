@@ -60,4 +60,4 @@ Se utiliza EF Core Global Query Filters en lugar de Supabase RLS. Cada tabla (ex
 - `Document(TenantId, ExpirationDate)` — Optimiza el dashboard de cumplimiento y alertas de vencimiento.
 
 ## Migration
-- `backend/Migrations/*_InitialSchema.cs` (EF Core Migrations)
+- `Backend/Migrations/*_InitialSchema.cs` (EF Core Migrations)
