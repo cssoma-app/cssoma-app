@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { useNotification } from "@/context/NotificationContext"
+import { getErrorMessage } from "@/lib/utils"
 import { Building, Plus, Calendar, Users, FileText, Lock, PlusCircle, MapPin, Phone, Mail, Edit, Trash2, Power, Send } from "lucide-react"
 
 interface Tenant {
@@ -129,8 +130,8 @@ export default function TenantsPage() {
       setAdminEmail("")
       setIsCreateModalOpen(false)
       fetchTenants()
-    } catch (err: any) {
-      showError("Error de Registro", err.message || "Hubo un problema al crear la empresa.")
+    } catch (err) {
+      showError("Error de Registro", getErrorMessage(err, "Hubo un problema al crear la empresa."))
     } finally {
       setIsSubmitting(false)
     }
@@ -178,8 +179,8 @@ export default function TenantsPage() {
       showSuccess("Cambios Guardados", `La información de la empresa "${editName}" ha sido actualizada con éxito en la plataforma.`)
       setIsEditModalOpen(false)
       fetchTenants()
-    } catch (err: any) {
-      showError("Error de Modificación", err.message || "No se pudieron aplicar los cambios en la empresa.")
+    } catch (err) {
+      showError("Error de Modificación", getErrorMessage(err, "No se pudieron aplicar los cambios en la empresa."))
     } finally {
       setIsSubmitting(false)
     }
@@ -206,8 +207,8 @@ export default function TenantsPage() {
       const data = await response.json()
       showSuccess("Estado Actualizado", data.message)
       fetchTenants()
-    } catch (err: any) {
-      showError("Error de Transacción", err.message || "Hubo un error al actualizar el estado de la empresa.")
+    } catch (err) {
+      showError("Error de Transacción", getErrorMessage(err, "Hubo un error al actualizar el estado de la empresa."))
     }
   }
 
@@ -247,8 +248,8 @@ export default function TenantsPage() {
 
       showSuccess("Empresa Eliminada", `La empresa "${tenant.name}" y todos sus archivos asociados se han eliminado del sistema.`)
       fetchTenants()
-    } catch (err: any) {
-      showError("Error de Eliminación", err.message || "No se pudo eliminar la empresa.")
+    } catch (err) {
+      showError("Error de Eliminación", getErrorMessage(err, "No se pudo eliminar la empresa."))
     }
   }
 
@@ -284,8 +285,8 @@ export default function TenantsPage() {
       }
 
       showSuccess("Correo Reenviado", "Se ha generado una nueva contraseña temporal y ha sido enviada con éxito al administrador corporativo.")
-    } catch (err: any) {
-      showError("Error de Reenvío", err.message || "No se pudo reenviar la contraseña temporal en este momento.")
+    } catch (err) {
+      showError("Error de Reenvío", getErrorMessage(err, "No se pudo reenviar la contraseña temporal en este momento."))
     }
   }
 

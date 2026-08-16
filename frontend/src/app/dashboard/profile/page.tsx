@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
+import { getErrorMessage } from "@/lib/utils"
 import { User, Mail, Shield, CheckCircle2, AlertCircle, Save } from "lucide-react"
 
 export default function ProfilePage() {
@@ -77,8 +78,8 @@ export default function ProfilePage() {
       setTimeout(() => {
         window.location.reload();
       }, 1500);
-    } catch (err: any) {
-      setErrorMessage(err.message || "Hubo un error al guardar los cambios.")
+    } catch (err) {
+      setErrorMessage(getErrorMessage(err, "Hubo un error al guardar los cambios."))
     } finally {
       setIsLoading(false)
     }
