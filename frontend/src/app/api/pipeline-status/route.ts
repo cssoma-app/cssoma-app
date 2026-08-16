@@ -4,6 +4,11 @@ const OWNER = "cssoma-app"
 const REPO = "cssoma-app"
 const WORKFLOW_FILE = "ci.yml"
 
+const RENDER_SERVICE_IDS: Record<"develop" | "main", string> = {
+  develop: "srv-d9vv0ak9v7es73870e00",
+  main: "srv-da0vemmgekts73fttp8g",
+}
+
 type GhStep = { name: string; status: string; conclusion: string | null; number: number }
 type GhJob = { id: number; name: string; status: string; conclusion: string | null; steps: GhStep[]; html_url: string }
 type GhRun = {
@@ -50,13 +55,55 @@ async function ghFetch(path: string) {
   return res.json()
 }
 
+type RenderDeploy = {
+  id: string
+  status: string
+  createdAt: string
+  finishedAt: string | null
+  commitId?: string
+  url: string
+}
+
+async function renderFetch(path: string) {
+  const key = process.env.RENDER_API_KEY
+  if (!key) return null
+  const res = await fetch(`https://api.render.com/v1${path}`, {
+    headers: {
+      Authorization: `Bearer ${key}`,
+      Accept: "application/json",
+    },
+    cache: "no-store",
+  })
+  if (!res.ok) return null
+  return res.json()
+}
+
+async function renderLatestDeploy(serviceId: string): Promise<RenderDeploy | null> {
+  const data = await renderFetch(`/services/${serviceId}/deploys?limit=1`)
+  const entry = Array.isArray(data) ? data[0] : null
+  const deploy = entry?.deploy ?? entry
+  if (!deploy?.id) return null
+  return {
+    id: deploy.id,
+    status: deploy.status,
+    createdAt: deploy.createdAt,
+    finishedAt: deploy.finishedAt ?? null,
+    commitId: deploy.commit?.id?.substring(0, 7),
+    url: `https://dashboard.render.com/web/${serviceId}/deploys/${deploy.id}`,
+  }
+}
+
 async function branchPipeline(branch: string) {
+  const renderDeploy = process.env.RENDER_API_KEY
+    ? await renderLatestDeploy(RENDER_SERVICE_IDS[branch as "develop" | "main"])
+    : null
+
   const runsData = await ghFetch(
     `/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW_FILE}/runs?branch=${branch}&per_page=1`
   )
   const run: GhRun | undefined = runsData?.workflow_runs?.[0]
   if (!run) {
-    return { branch, configured: true, run: null, jobs: [] }
+    return { branch, configured: true, renderDeploy, run: null, jobs: [] }
   }
 
   const jobsData = await ghFetch(`/repos/${OWNER}/${REPO}/actions/runs/${run.id}/jobs`)
@@ -65,6 +112,7 @@ async function branchPipeline(branch: string) {
   return {
     branch,
     configured: true,
+    renderDeploy,
     run: {
       id: run.id,
       status: run.status,
@@ -103,7 +151,7 @@ export async function GET(req: NextRequest) {
     develop,
     main,
     integrations: {
-      render: Boolean(process.env.RENDER_STATUS_ENABLED),
+      render: Boolean(process.env.RENDER_API_KEY),
       sentry: Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN),
     },
     fetchedAt: new Date().toISOString(),

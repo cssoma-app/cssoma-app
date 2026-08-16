@@ -32,9 +32,19 @@ type RunInfo = {
   actor: string
 }
 
+type RenderDeploy = {
+  id: string
+  status: string
+  createdAt: string
+  finishedAt: string | null
+  commitId?: string
+  url: string
+}
+
 type BranchPipeline = {
   branch: string
   configured: boolean
+  renderDeploy: RenderDeploy | null
   run: RunInfo | null
   jobs: Job[]
 }
@@ -55,6 +65,28 @@ function findStep(jobs: Job[], jobHint: string, stepHint: string): StepStatus {
   if (step.conclusion === "success") return "success"
   if (step.conclusion === "skipped") return "pending"
   return "failure"
+}
+
+function renderDeployStep(deploy: RenderDeploy | null, renderConfigured: boolean): StepStatus {
+  if (!renderConfigured) return "unconfigured"
+  if (!deploy) return "pending"
+  switch (deploy.status) {
+    case "live":
+      return "success"
+    case "build_failed":
+    case "update_failed":
+    case "canceled":
+    case "deactivated":
+    case "pre_deploy_failed":
+      return "failure"
+    case "created":
+    case "build_in_progress":
+    case "update_in_progress":
+    case "pre_deploy_in_progress":
+      return "running"
+    default:
+      return "pending"
+  }
 }
 
 function worstOf(statuses: StepStatus[]): StepStatus {
@@ -110,7 +142,10 @@ function BranchTrack({ title, subtitle, data, sentryConfigured, renderConfigured
   ])
   const commit: StepStatus = data.run ? "success" : "pending"
   const artifact: StepStatus = build === "success" ? "success" : build === "failure" ? "failure" : "pending"
-  const deploy: StepStatus = renderConfigured ? (build === "success" && test === "success" ? "success" : "unconfigured") : "unconfigured"
+  const deploy = renderDeployStep(data.renderDeploy, renderConfigured)
+  const deployHint = data.renderDeploy
+    ? `${data.renderDeploy.status}${data.renderDeploy.commitId ? ` · ${data.renderDeploy.commitId}` : ""}`
+    : "Render + Vercel"
   const monitor: StepStatus = sentryConfigured ? "pending" : "unconfigured"
 
   return (
@@ -135,8 +170,12 @@ function BranchTrack({ title, subtitle, data, sentryConfigured, renderConfigured
         <Stage n={3} icon={FlaskConical} label="Test" status={test} />
         <Stage n={4} icon={ScanSearch} label="Code Analysis" status={analysis} hint="lint · types · audit" />
         <Stage n={5} icon={Package} label="Artifact" status={artifact} hint="Vercel / Docker" />
-        <Stage n={isProd ? 7 : 6} icon={isProd ? UserCheck : Server} label={isProd ? "Approval" : "Deploy Staging"} status={isProd ? "unconfigured" : deploy} hint={isProd ? "PR review" : "Render + Vercel"} />
-        {isProd && <Stage n={8} icon={Rocket} label="Deploy Prod" status={deploy} hint="Render + Vercel" />}
+        {isProd ? (
+          <Stage n={7} icon={UserCheck} label="Approval" status="unconfigured" hint="PR review" />
+        ) : (
+          <Stage n={6} icon={Server} label="Deploy Staging" status={deploy} hint={deployHint} />
+        )}
+        {isProd && <Stage n={8} icon={Rocket} label="Deploy Prod" status={deploy} hint={deployHint} />}
         <Stage n={9} icon={Activity} label="Monitor" status={monitor} hint="Sentry" />
       </div>
     </div>
