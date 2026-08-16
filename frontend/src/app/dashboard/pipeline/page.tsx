@@ -49,11 +49,21 @@ type BranchPipeline = {
   jobs: Job[]
 }
 
+type SentryIssue = { id: string; title: string; count: string; culprit: string; permalink: string }
+type SentrySummary = { unresolvedCount: number; issues: SentryIssue[] } | null
+
 type ApiResponse = {
   develop: BranchPipeline
   main: BranchPipeline
+  sentry: SentrySummary
   integrations: { render: boolean; sentry: boolean }
   fetchedAt: string
+}
+
+function sentryStep(sentry: SentrySummary, sentryConfigured: boolean): StepStatus {
+  if (!sentryConfigured) return "unconfigured"
+  if (!sentry) return "pending"
+  return sentry.unresolvedCount > 0 ? "failure" : "success"
 }
 
 function findStep(jobs: Job[], jobHint: string, stepHint: string): StepStatus {
@@ -122,10 +132,11 @@ function Stage({ n, icon: Icon, label, status, hint }: { n: number; icon: typeof
   )
 }
 
-function BranchTrack({ title, subtitle, data, sentryConfigured, renderConfigured, isProd }: {
+function BranchTrack({ title, subtitle, data, sentry, sentryConfigured, renderConfigured, isProd }: {
   title: string
   subtitle: string
   data: BranchPipeline
+  sentry: SentrySummary
   sentryConfigured: boolean
   renderConfigured: boolean
   isProd: boolean
@@ -146,7 +157,10 @@ function BranchTrack({ title, subtitle, data, sentryConfigured, renderConfigured
   const deployHint = data.renderDeploy
     ? `${data.renderDeploy.status}${data.renderDeploy.commitId ? ` · ${data.renderDeploy.commitId}` : ""}`
     : "Render + Vercel"
-  const monitor: StepStatus = sentryConfigured ? "pending" : "unconfigured"
+  const monitor = sentryStep(sentry, sentryConfigured)
+  const monitorHint = sentryConfigured
+    ? (sentry ? `${sentry.unresolvedCount} sin resolver (todo el proyecto)` : "Sentry")
+    : "Sentry"
 
   return (
     <div className="rounded-3xl border border-border/50 bg-background/50 p-6 shadow-sm">
@@ -176,7 +190,7 @@ function BranchTrack({ title, subtitle, data, sentryConfigured, renderConfigured
           <Stage n={6} icon={Server} label="Deploy Staging" status={deploy} hint={deployHint} />
         )}
         {isProd && <Stage n={8} icon={Rocket} label="Deploy Prod" status={deploy} hint={deployHint} />}
-        <Stage n={9} icon={Activity} label="Monitor" status={monitor} hint="Sentry" />
+        <Stage n={9} icon={Activity} label="Monitor" status={monitor} hint={monitorHint} />
       </div>
     </div>
   )
@@ -243,6 +257,7 @@ export default function PipelinePage() {
             title="Staging (develop)"
             subtitle="Rama de trabajo — Render (staging) + Vercel Preview"
             data={data.develop}
+            sentry={data.sentry}
             sentryConfigured={data.integrations.sentry}
             renderConfigured={data.integrations.render}
             isProd={false}
@@ -251,6 +266,7 @@ export default function PipelinePage() {
             title="Producción (main)"
             subtitle="Rama de release — Render (prod) + Vercel Production"
             data={data.main}
+            sentry={data.sentry}
             sentryConfigured={data.integrations.sentry}
             renderConfigured={data.integrations.render}
             isProd={true}

@@ -9,6 +9,10 @@ const RENDER_SERVICE_IDS: Record<"develop" | "main", string> = {
   main: "srv-da0vemmgekts73fttp8g",
 }
 
+// Project IDs parsed straight from the DSNs (the numeric suffix after the last "/").
+// Sentry's issues endpoint accepts the numeric internal project id directly.
+const SENTRY_PROJECT_IDS = ["4511922384076800", "4511922388336640"]
+
 type GhStep = { name: string; status: string; conclusion: string | null; number: number }
 type GhJob = { id: number; name: string; status: string; conclusion: string | null; steps: GhStep[]; html_url: string }
 type GhRun = {
@@ -93,6 +97,44 @@ async function renderLatestDeploy(serviceId: string): Promise<RenderDeploy | nul
   }
 }
 
+type SentryIssue = { id: string; title: string; count: string; culprit: string; permalink: string }
+type SentrySummary = { unresolvedCount: number; issues: SentryIssue[] } | null
+
+async function sentryFetch(path: string) {
+  const token = process.env.SENTRY_AUTH_TOKEN
+  const org = process.env.SENTRY_ORG
+  if (!token || !org) return null
+  const res = await fetch(`https://sentry.io/api/0${path.replace("{org}", org)}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+    cache: "no-store",
+  })
+  if (!res.ok) return null
+  return res.json()
+}
+
+async function sentrySummary(): Promise<SentrySummary> {
+  if (!process.env.SENTRY_AUTH_TOKEN || !process.env.SENTRY_ORG) return null
+
+  const results = await Promise.all(
+    SENTRY_PROJECT_IDS.map((id) =>
+      sentryFetch(`/organizations/{org}/issues/?project=${id}&query=is:unresolved&statsPeriod=24h&limit=10`)
+    )
+  )
+
+  const issues: SentryIssue[] = results
+    .filter((r): r is unknown[] => Array.isArray(r))
+    .flat()
+    .map((raw) => {
+      const i = raw as { id: string; title: string; count: string; culprit: string; permalink: string }
+      return { id: i.id, title: i.title, count: i.count, culprit: i.culprit, permalink: i.permalink }
+    })
+
+  return { unresolvedCount: issues.length, issues: issues.slice(0, 5) }
+}
+
 async function branchPipeline(branch: string) {
   const renderDeploy = process.env.RENDER_API_KEY
     ? await renderLatestDeploy(RENDER_SERVICE_IDS[branch as "develop" | "main"])
@@ -145,14 +187,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "GITHUB_TOKEN no configurado en el servidor" }, { status: 503 })
   }
 
-  const [develop, main] = await Promise.all([branchPipeline("develop"), branchPipeline("main")])
+  const [develop, main, sentry] = await Promise.all([
+    branchPipeline("develop"),
+    branchPipeline("main"),
+    sentrySummary(),
+  ])
 
   return NextResponse.json({
     develop,
     main,
+    sentry,
     integrations: {
       render: Boolean(process.env.RENDER_API_KEY),
-      sentry: Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN),
+      sentry: Boolean(process.env.SENTRY_AUTH_TOKEN && process.env.SENTRY_ORG),
     },
     fetchedAt: new Date().toISOString(),
   })
