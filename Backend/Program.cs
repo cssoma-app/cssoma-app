@@ -10,6 +10,18 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configurar Sentry (no-op si Sentry:Dsn no está configurado)
+var sentryDsn = builder.Configuration["Sentry:Dsn"];
+if (!string.IsNullOrWhiteSpace(sentryDsn))
+{
+    builder.WebHost.UseSentry(o =>
+    {
+        o.Dsn = sentryDsn;
+        o.TracesSampleRate = 0.1;
+        o.Environment = builder.Environment.EnvironmentName;
+    });
+}
+
 // Configurar Serilog
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
@@ -74,7 +86,11 @@ builder.Services.AddRateLimiter(options =>
 });
 
 // Configure JWT Authentication
-var secretKey = builder.Configuration["Jwt:Secret"] ?? "superSecretKeyCSOMA2026SSTerraSaaSPlatform";
+var secretKey = builder.Configuration["Jwt:Secret"];
+if (string.IsNullOrWhiteSpace(secretKey))
+{
+    throw new InvalidOperationException("Jwt:Secret no está configurado. Definilo vía dotnet user-secrets (local) o la variable de entorno Jwt__Secret (staging/producción).");
+}
 var key = Encoding.UTF8.GetBytes(secretKey);
 
 builder.Services.AddAuthentication(options =>
