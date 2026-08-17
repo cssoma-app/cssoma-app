@@ -9,6 +9,13 @@ RUN dotnet publish BackendAPI.csproj -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
+
+# Npgsql's TLS negotiation (required by Supabase's connection pooler) needs
+# libgssapi_krb5.so.2, which this slim base image doesn't include by default.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /app/publish .
 
 ENV ASPNETCORE_ENVIRONMENT=Production
