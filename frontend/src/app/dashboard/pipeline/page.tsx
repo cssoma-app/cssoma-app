@@ -45,6 +45,7 @@ type BranchPipeline = {
   branch: string
   configured: boolean
   renderDeploy: RenderDeploy | null
+  renderError?: string
   run: RunInfo | null
   jobs: Job[]
 }
@@ -156,7 +157,7 @@ function BranchTrack({ title, subtitle, data, sentry, sentryConfigured, renderCo
   const deploy = renderDeployStep(data.renderDeploy, renderConfigured)
   const deployHint = data.renderDeploy
     ? `${data.renderDeploy.status}${data.renderDeploy.commitId ? ` · ${data.renderDeploy.commitId}` : ""}`
-    : "Render + Vercel"
+    : data.renderError || "Render + Vercel"
   const monitor = sentryStep(sentry, sentryConfigured)
   const monitorHint = sentryConfigured
     ? (sentry ? `${sentry.unresolvedCount} sin resolver (todo el proyecto)` : "Sentry")

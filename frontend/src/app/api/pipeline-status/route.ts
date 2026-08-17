@@ -74,32 +74,46 @@ type RenderDeploy = {
   url: string
 }
 
-async function renderFetch(path: string) {
+async function renderFetch(path: string): Promise<{ ok: true; data: unknown } | { ok: false; error: string }> {
   const key = process.env.RENDER_API_KEY
-  if (!key) return null
-  const res = await fetch(`https://api.render.com/v1${path}`, {
-    headers: {
-      Authorization: `Bearer ${key}`,
-      Accept: "application/json",
-    },
-    cache: "no-store",
-  })
-  if (!res.ok) return null
-  return res.json()
+  if (!key) return { ok: false, error: "RENDER_API_KEY no está seteada" }
+  try {
+    const res = await fetch(`https://api.render.com/v1${path}`, {
+      headers: {
+        Authorization: `Bearer ${key}`,
+        Accept: "application/json",
+      },
+      cache: "no-store",
+    })
+    if (!res.ok) {
+      const body = await res.text().catch(() => "")
+      return { ok: false, error: `HTTP ${res.status}${body ? `: ${body.slice(0, 200)}` : ""}` }
+    }
+    return { ok: true, data: await res.json() }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "fetch falló" }
+  }
 }
 
-async function renderLatestDeploy(serviceId: string): Promise<RenderDeploy | null> {
-  const data = await renderFetch(`/services/${serviceId}/deploys?limit=1`)
+async function renderLatestDeploy(serviceId: string): Promise<{ deploy: RenderDeploy | null; error?: string }> {
+  const result = await renderFetch(`/services/${serviceId}/deploys?limit=1`)
+  if (!result.ok) return { deploy: null, error: result.error }
+
+  const data = result.data
   const entry = Array.isArray(data) ? data[0] : null
-  const deploy = entry?.deploy ?? entry
-  if (!deploy?.id) return null
+  const deploy = (entry?.deploy ?? entry) as Record<string, unknown> | null
+  if (!deploy?.id) return { deploy: null, error: "Respuesta de Render sin deploys (array vacío o forma inesperada)" }
   return {
-    id: deploy.id,
-    status: deploy.status,
-    createdAt: deploy.createdAt,
-    finishedAt: deploy.finishedAt ?? null,
-    commitId: deploy.commit?.id?.substring(0, 7),
-    url: `https://dashboard.render.com/web/${serviceId}/deploys/${deploy.id}`,
+    deploy: {
+      id: deploy.id as string,
+      status: deploy.status as string,
+      createdAt: deploy.createdAt as string,
+      finishedAt: (deploy.finishedAt as string) ?? null,
+      commitId: (deploy.commit as Record<string, unknown> | undefined)?.id
+        ? String((deploy.commit as Record<string, unknown>).id).substring(0, 7)
+        : undefined,
+      url: `https://dashboard.render.com/web/${serviceId}/deploys/${deploy.id}`,
+    },
   }
 }
 
@@ -142,16 +156,18 @@ async function sentrySummary(): Promise<SentrySummary> {
 }
 
 async function branchPipeline(branch: string) {
-  const renderDeploy = process.env.RENDER_API_KEY
+  const renderResult = process.env.RENDER_API_KEY
     ? await renderLatestDeploy(RENDER_SERVICE_IDS[branch as "develop" | "main"])
-    : null
+    : { deploy: null, error: undefined }
+  const renderDeploy = renderResult.deploy
+  const renderError = renderResult.error
 
   const runsData = await ghFetch(
     `/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW_FILE}/runs?branch=${branch}&per_page=1`
   )
   const run: GhRun | undefined = runsData?.workflow_runs?.[0]
   if (!run) {
-    return { branch, configured: true, renderDeploy, run: null, jobs: [] }
+    return { branch, configured: true, renderDeploy, renderError, run: null, jobs: [] }
   }
 
   const jobsData = await ghFetch(`/repos/${OWNER}/${REPO}/actions/runs/${run.id}/jobs`)
@@ -161,6 +177,7 @@ async function branchPipeline(branch: string) {
     branch,
     configured: true,
     renderDeploy,
+    renderError,
     run: {
       id: run.id,
       status: run.status,
