@@ -41,11 +41,14 @@ type RenderDeploy = {
   url: string
 }
 
+type ApprovalStatus = { approved: boolean | null; reviewer?: string; prNumber?: number } | null
+
 type BranchPipeline = {
   branch: string
   configured: boolean
   renderDeploy: RenderDeploy | null
   renderError?: string
+  approval: ApprovalStatus
   run: RunInfo | null
   jobs: Job[]
 }
@@ -163,6 +166,17 @@ function BranchTrack({ title, subtitle, data, sentry, sentryConfigured, renderCo
     ? (sentry ? `${sentry.unresolvedCount} sin resolver (todo el proyecto)` : "Sentry")
     : "Sentry"
 
+  const approvalStatus: StepStatus = !data.approval
+    ? "pending"
+    : data.approval.approved
+      ? "success"
+      : "failure"
+  const approvalHint = data.approval
+    ? (data.approval.approved
+        ? `PR #${data.approval.prNumber} · ${data.approval.reviewer ?? "aprobado"}`
+        : `PR #${data.approval.prNumber} sin aprobación`)
+    : "PR review"
+
   return (
     <div className="rounded-3xl border border-border/50 bg-background/50 p-6 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
@@ -186,7 +200,7 @@ function BranchTrack({ title, subtitle, data, sentry, sentryConfigured, renderCo
         <Stage n={4} icon={ScanSearch} label="Code Analysis" status={analysis} hint="lint · types · audit" />
         <Stage n={5} icon={Package} label="Artifact" status={artifact} hint="Vercel / Docker" />
         {isProd ? (
-          <Stage n={7} icon={UserCheck} label="Approval" status="unconfigured" hint="PR review" />
+          <Stage n={7} icon={UserCheck} label="Approval" status={approvalStatus} hint={approvalHint} />
         ) : (
           <Stage n={6} icon={Server} label="Deploy Staging" status={deploy} hint={deployHint} />
         )}
