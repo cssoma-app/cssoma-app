@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 
+// This route reads the session cookie off `request` directly (not the
+// `cookies()` helper from next/headers), so Next.js doesn't automatically
+// treat it as dynamic — force it, otherwise the response can get cached and
+// "stick" to whatever Render/GitHub/Sentry returned on the first request.
+export const dynamic = "force-dynamic"
+
 const OWNER = "cssoma-app"
 const REPO = "cssoma-app"
 const WORKFLOW_FILE = "ci.yml"
