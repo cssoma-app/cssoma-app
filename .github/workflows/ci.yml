@@ -88,11 +88,22 @@ jobs:
             echo "::error::Render deploy trigger failed (HTTP $code)"
             exit 1
           fi
-          deploy_id=$(echo "$body" | jq -r '.id // .deploy.id // empty')
+
+          # Render's create-deploy response body can be empty even on success
+          # (e.g. 202 Accepted) — don't rely on it. Fetch the latest deploy instead.
+          deploy_id=""
+          for i in $(seq 1 10); do
+            deploy_id=$(curl -s -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+              "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys?limit=1" \
+              | jq -r '.[0].deploy.id // .[0].id // empty')
+            [ -n "$deploy_id" ] && break
+            sleep 3
+          done
           if [ -z "$deploy_id" ]; then
-            echo "::error::Could not parse deploy id from Render response"
+            echo "::error::Could not find the triggered deploy on Render after retrying"
             exit 1
           fi
+          echo "Deploy id: $deploy_id"
           echo "deploy_id=$deploy_id" >> "$GITHUB_OUTPUT"
 
       - name: Wait for deploy to finish (up to ~8 min)

@@ -155,6 +155,20 @@ async function sentrySummary(): Promise<SentrySummary> {
   return { unresolvedCount: issues.length, issues: issues.slice(0, 5) }
 }
 
+type ApprovalStatus = { approved: boolean | null; reviewer?: string; prNumber?: number }
+
+async function mainApprovalStatus(sha: string): Promise<ApprovalStatus> {
+  const prsData = await ghFetch(`/repos/${OWNER}/${REPO}/commits/${sha}/pulls`)
+  const pr = Array.isArray(prsData) ? prsData[0] : null
+  if (!pr) return { approved: null }
+
+  const reviewsData = await ghFetch(`/repos/${OWNER}/${REPO}/pulls/${pr.number}/reviews`)
+  const reviews: { state: string; user?: { login: string } }[] = Array.isArray(reviewsData) ? reviewsData : []
+  const approval = [...reviews].reverse().find((r) => r.state === "APPROVED")
+
+  return { approved: Boolean(approval), reviewer: approval?.user?.login, prNumber: pr.number }
+}
+
 async function branchPipeline(branch: string) {
   const renderResult = process.env.RENDER_API_KEY
     ? await renderLatestDeploy(RENDER_SERVICE_IDS[branch as "develop" | "main"])
@@ -167,8 +181,10 @@ async function branchPipeline(branch: string) {
   )
   const run: GhRun | undefined = runsData?.workflow_runs?.[0]
   if (!run) {
-    return { branch, configured: true, renderDeploy, renderError, run: null, jobs: [] }
+    return { branch, configured: true, renderDeploy, renderError, approval: null as ApprovalStatus | null, run: null, jobs: [] }
   }
+
+  const approval = branch === "main" ? await mainApprovalStatus(run.head_sha) : null
 
   const jobsData = await ghFetch(`/repos/${OWNER}/${REPO}/actions/runs/${run.id}/jobs`)
   const jobs: GhJob[] = jobsData?.jobs ?? []
@@ -178,6 +194,7 @@ async function branchPipeline(branch: string) {
     configured: true,
     renderDeploy,
     renderError,
+    approval,
     run: {
       id: run.id,
       status: run.status,
