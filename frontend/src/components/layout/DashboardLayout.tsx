@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import { ThemeToggle } from "@/components/ThemeToggle"
-import { Home, FileText, Users, Settings, LogOut, Building, User as UserIcon, Menu, Briefcase } from "lucide-react"
+import { Home, FileText, Users, Settings, LogOut, Building, User as UserIcon, Menu, Briefcase, GitBranch } from "lucide-react"
 import Image from "next/image"
 
 // Patrón Map/Registry para mapear de manera escalable las rutas de Next.js a sus títulos correspondientes
@@ -12,6 +12,7 @@ const ROUTE_TITLES: Record<string, string> = {
   "/dashboard/profile": "Datos Personales",
   "/dashboard/tenants": "Administración de Empresas",
   "/dashboard/services": "Servicios Globales",
+  "/dashboard/pipeline": "Pipeline CI/CD",
 };
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -121,6 +122,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <a href="/dashboard/services" className={getLinkClass("/dashboard/services")}>
                   <Briefcase size={18} />
                   Servicios
+                </a>
+                <a href="/dashboard/pipeline" className={getLinkClass("/dashboard/pipeline")}>
+                  <GitBranch size={18} />
+                  Pipeline CI/CD
                 </a>
               </>
             )}

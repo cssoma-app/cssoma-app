@@ -6,7 +6,10 @@ namespace BackendAPI.Helpers
 {
     public static class InputSanitizer
     {
-        private static readonly Regex InjectionRegex = new Regex(@"[<>'""`;\-]", RegexOptions.Compiled);
+        private static readonly Regex InjectionRegex = new Regex(@"[<>'""`;=\-]", RegexOptions.Compiled);
+        private static readonly Regex TagRegex = new Regex(@"<[^>]*>", RegexOptions.Compiled);
+        private static readonly Regex ScriptBlockRegex = new Regex(@"<script\b[^>]*>[\s\S]*?</script\s*>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex SqlBlockCommentRegex = new Regex(@"/\*.*?\*/", RegexOptions.Compiled | RegexOptions.Singleline);
 
         /// <summary>
         /// Sanitiza un correo electrónico aplicando normalización Unicode FormC,
@@ -20,10 +23,13 @@ namespace BackendAPI.Helpers
             // 1. Normalización Unicode FormC
             var normalized = email.Normalize(NormalizationForm.FormC).Trim();
 
-            // 2. Limpieza de caracteres de inyección
-            var sanitized = InjectionRegex.Replace(normalized, string.Empty);
+            // 2. Remover etiquetas HTML/XML completas (incluye el nombre de la etiqueta)
+            var sanitized = TagRegex.Replace(normalized, string.Empty);
 
-            // 3. Forzar minúsculas para correos consistente
+            // 3. Limpieza de caracteres de inyección
+            sanitized = InjectionRegex.Replace(sanitized, string.Empty);
+
+            // 4. Forzar minúsculas para correos consistente
             return sanitized.ToLowerInvariant();
         }
 
@@ -40,11 +46,17 @@ namespace BackendAPI.Helpers
             // 1. Normalización Unicode FormC
             var normalized = password.Normalize(NormalizationForm.FormC);
 
-            // 2. Remover etiquetas HTML/XML básicas y tags scripts para evitar XSS
-            var sanitized = Regex.Replace(normalized, @"<[^>]*>", string.Empty);
+            // 2. Remover bloques <script>...</script> completos (incluye el contenido)
+            var sanitized = ScriptBlockRegex.Replace(normalized, string.Empty);
 
-            // 3. Eliminar caracteres específicos de comentarios SQL maliciosos (-- o /*)
-            sanitized = sanitized.Replace("--", string.Empty).Replace("/*", string.Empty).Replace("*/", string.Empty);
+            // 3. Remover cualquier otra etiqueta HTML/XML restante
+            sanitized = TagRegex.Replace(sanitized, string.Empty);
+
+            // 4. Remover bloques de comentario SQL /* ... */ completos (incluye el contenido)
+            sanitized = SqlBlockCommentRegex.Replace(sanitized, string.Empty);
+
+            // 5. Eliminar comentarios de línea SQL (--)
+            sanitized = sanitized.Replace("--", string.Empty);
 
             return sanitized;
         }

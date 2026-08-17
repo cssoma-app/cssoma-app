@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Mail, ShieldCheck, AlertCircle, ArrowRight, Lock, Eye, EyeOff, KeyRound } from "lucide-react"
 import { ThemeToggle } from "@/components/ThemeToggle"
+import { getErrorMessage } from "@/lib/utils"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -70,8 +71,8 @@ export default function LoginPage() {
 
         setIsSuccess(true)
       }
-    } catch (err: any) {
-      setErrorMessage(err.message || "Hubo un problema al conectar con el servidor de autenticación.")
+    } catch (err) {
+      setErrorMessage(getErrorMessage(err, "Hubo un problema al conectar con el servidor de autenticación."))
     } finally {
       setIsLoading(false)
     }
@@ -107,8 +108,8 @@ export default function LoginPage() {
       
       document.cookie = `token=${data.token}; path=/; max-age=604800; SameSite=Lax`
       router.push("/dashboard")
-    } catch (err: any) {
-      setErrorMessage(err.message || "Hubo un error al redefinir tu contraseña.")
+    } catch (err) {
+      setErrorMessage(getErrorMessage(err, "Hubo un error al redefinir tu contraseña."))
     } finally {
       setIsLoading(false)
     }

@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -12,7 +13,7 @@ const cspHeader = `
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
-    connect-src 'self' http://localhost:5166 https://localhost:7057${apiUrl ? ` ${apiUrl}` : ''};
+    connect-src 'self' http://localhost:5166 https://localhost:7057 https://*.ingest.us.sentry.io https://*.ingest.sentry.io${apiUrl ? ` ${apiUrl}` : ''};
     block-all-mixed-content;
     upgrade-insecure-requests;
 `.replace(/\s{2,}/g, ' ').trim();
@@ -33,4 +34,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  silent: true,
+  sourcemaps: { disable: true },
+  webpack: { treeshake: { removeDebugLogging: true } },
+});

@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, ShieldCheck, RefreshCw, CheckCircle2, Lock, Eye, EyeOff, AlertTriangle } from "lucide-react"
 import { ThemeToggle } from "@/components/ThemeToggle"
+import { getErrorMessage } from "@/lib/utils"
 
 export default function VerifyOtpPage() {
   const router = useRouter()
@@ -34,6 +35,39 @@ export default function VerifyOtpPage() {
   const [isPasswordSuccess, setIsPasswordSuccess] = useState(false)
   
   const inputsRef = useRef<(HTMLInputElement | null)[]>([])
+
+  const handleVerification = async (codeToVerify: string) => {
+    setIsLoading(true)
+    setErrorMessage("")
+
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5166"
+      const response = await fetch(`${apiBaseUrl}/api/auth/verify-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code: codeToVerify })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || "Código de seguridad incorrecto o expirado.")
+      }
+
+      setIsSuccess(true)
+
+      // En vez de redireccionar inmediatamente, mostramos el paso de crear contraseña
+      setTimeout(() => {
+        setIsSuccess(false)
+        setShowPasswordForm(true)
+      }, 1000)
+    } catch (err) {
+      setErrorMessage(getErrorMessage(err, "Error al verificar el código de seguridad."))
+      setCode(["", "", "", ""])
+      inputsRef.current[0]?.focus()
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // Cuenta regresiva para reenviar código
   useEffect(() => {
@@ -79,39 +113,6 @@ export default function VerifyOtpPage() {
       const digits = pastedData.split("")
       setCode(digits)
       inputsRef.current[3]?.focus()
-    }
-  }
-
-  const handleVerification = async (codeToVerify: string) => {
-    setIsLoading(true)
-    setErrorMessage("")
-
-    try {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5166"
-      const response = await fetch(`${apiBaseUrl}/api/auth/verify-code`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code: codeToVerify })
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.message || "Código de seguridad incorrecto o expirado.")
-      }
-
-      setIsSuccess(true)
-      
-      // En vez de redireccionar inmediatamente, mostramos el paso de crear contraseña
-      setTimeout(() => {
-        setIsSuccess(false)
-        setShowPasswordForm(true)
-      }, 1000)
-    } catch (err: any) {
-      setErrorMessage(err.message || "Error al verificar el código de seguridad.")
-      setCode(["", "", "", ""])
-      inputsRef.current[0]?.focus()
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -221,8 +222,8 @@ export default function VerifyOtpPage() {
         document.cookie = `token=${data.token}; path=/; max-age=604800; SameSite=Lax`
         router.push("/dashboard")
       }, 1500)
-    } catch (err: any) {
-      setErrorMessage(err.message || "No se pudo establecer la contraseña en el servidor.")
+    } catch (err) {
+      setErrorMessage(getErrorMessage(err, "No se pudo establecer la contraseña en el servidor."))
     } finally {
       setIsLoading(false)
     }

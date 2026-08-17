@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
+import { getErrorMessage } from "@/lib/utils"
 import { Briefcase, ToggleLeft, ToggleRight, CheckCircle2, AlertCircle, ShieldAlert } from "lucide-react"
 
 interface SassService {
@@ -81,8 +82,8 @@ export default function ServicesPage() {
       
       // Actualizar estado local
       setServices(prev => prev.map(s => s.id === id ? { ...s, isEnabled: data.service.isEnabled } : s))
-    } catch (err: any) {
-      setErrorMessage(err.message || "Error al procesar la solicitud.")
+    } catch (err) {
+      setErrorMessage(getErrorMessage(err, "Error al procesar la solicitud."))
     }
   }
 
