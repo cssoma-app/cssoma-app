@@ -31,9 +31,10 @@ namespace BackendAPI.Services
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role.ToString()),
+                new Claim(ClaimTypes.Role, user.Role?.Key ?? string.Empty),
                 new Claim("FullName", user.FullName ?? string.Empty),
-                new Claim("TenantId", user.TenantId?.ToString() ?? string.Empty)
+                new Claim("TenantId", user.TenantId?.ToString() ?? string.Empty),
+                new Claim("IsPlatformOwner", (user.Tenant?.IsPlatformOwner ?? false) ? "true" : "false")
             };
 
             var token = new JwtSecurityToken(

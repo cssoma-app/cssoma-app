@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using BackendAPI.Models;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,63 @@ namespace BackendAPI.Data
             // Aplicar migraciones pendientes
             await dbContext.Database.MigrateAsync();
 
+            // Sembrado de Roles del sistema (RBAC vía datos, no enum rígido)
+            if (!await dbContext.Roles.AnyAsync())
+            {
+                dbContext.Roles.AddRange(
+                    new Role { Id = RoleKeys.SuperAdminId, Key = RoleKeys.SuperAdmin, DisplayName = "Super Administrador", IsSystemRole = true },
+                    new Role { Id = RoleKeys.AdminId, Key = RoleKeys.Admin, DisplayName = "Administrador de Empresa", IsSystemRole = true },
+                    new Role { Id = RoleKeys.MemberId, Key = RoleKeys.Member, DisplayName = "Colaborador", IsSystemRole = true }
+                );
+                await dbContext.SaveChangesAsync();
+                Console.WriteLine("[SEED] Roles del sistema sembrados exitosamente.");
+            }
+            else
+            {
+                // Backfill: marcar como sistema los 3 roles sembrados antes de que existiera IsSystemRole,
+                // para que RolesController los proteja de edición/eliminación.
+                var systemRoleIds = new[] { RoleKeys.SuperAdminId, RoleKeys.AdminId, RoleKeys.MemberId };
+                var unmarkedSystemRoles = await dbContext.Roles
+                    .Where(r => systemRoleIds.Contains(r.Id) && !r.IsSystemRole)
+                    .ToListAsync();
+
+                if (unmarkedSystemRoles.Count > 0)
+                {
+                    foreach (var role in unmarkedSystemRoles)
+                    {
+                        role.IsSystemRole = true;
+                    }
+                    await dbContext.SaveChangesAsync();
+                    Console.WriteLine("[SEED] Roles del sistema existentes marcados como IsSystemRole.");
+                }
+            }
+
+            // Sembrado del Tenant propietario de la plataforma (SSTerra Consultores).
+            // Los Admin que pertenezcan a este tenant obtienen permisos ampliados sobre
+            // el resto de empresas y usuarios (ver TenantsController.CanManageTenants()
+            // y UsersController.HasBroadAccess()).
+            var platformTenant = await dbContext.Tenants
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(t => t.IsPlatformOwner);
+
+            if (platformTenant == null)
+            {
+                platformTenant = new Tenant
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "SSTerra Consultores",
+                    RazonSocial = "TECHNOLO-GIS S.A.S.",
+                    NitRuc = "900.985.000-1",
+                    IsActive = true,
+                    IsPlatformOwner = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                dbContext.Tenants.Add(platformTenant);
+                await dbContext.SaveChangesAsync();
+                Console.WriteLine("[SEED] Tenant propietario de la plataforma (SSTerra Consultores) sembrado exitosamente.");
+            }
+
             // Sembrado de Superadmin desde la configuración
             var superAdminEmail = configuration["SuperAdmin:Email"];
             var supabaseAuthId = configuration["SuperAdmin:SupabaseAuthId"];
@@ -27,28 +85,55 @@ namespace BackendAPI.Data
                 var cleanedEmail = superAdminEmail.ToLower().Trim();
 
                 // Usamos IgnoreQueryFilters() para validar existencia global del usuario
-                var exists = await dbContext.Users
+                var existingSuperAdmin = await dbContext.Users
                     .IgnoreQueryFilters()
-                    .AnyAsync(u => u.Email.ToLower() == cleanedEmail);
+                    .FirstOrDefaultAsync(u => u.Email.ToLower() == cleanedEmail);
 
-                if (!exists)
+                if (existingSuperAdmin == null)
                 {
                     var superAdmin = new User
                     {
                         Id = Guid.NewGuid(),
                         Email = cleanedEmail,
                         FullName = "Super Administrador",
-                        Role = UserRole.SuperAdmin,
-                        SupabaseAuthId = string.IsNullOrWhiteSpace(supabaseAuthId) 
-                            ? "superadmin-default-id" 
+                        RoleId = RoleKeys.SuperAdminId,
+                        SupabaseAuthId = string.IsNullOrWhiteSpace(supabaseAuthId)
+                            ? "superadmin-default-id"
                             : supabaseAuthId,
-                        TenantId = null // SuperAdmin no pertenece a ningún Tenant específico
+                        TenantId = platformTenant.Id
                     };
 
                     dbContext.Users.Add(superAdmin);
                     await dbContext.SaveChangesAsync();
 
                     Console.WriteLine($"[SEED] Usuario Superadmin sembrado exitosamente: {cleanedEmail}");
+                }
+                else
+                {
+                    // Backfill/auto-corrección: el email configurado en SuperAdmin:Email SIEMPRE debe
+                    // terminar con RoleId=SuperAdmin y vinculado al tenant propietario, sin importar
+                    // qué rol/tenant tuviera esa fila antes (ej. si el email ya existía como Admin de
+                    // pruebas previas a esta migración).
+                    var needsUpdate = false;
+
+                    if (existingSuperAdmin.TenantId != platformTenant.Id)
+                    {
+                        existingSuperAdmin.TenantId = platformTenant.Id;
+                        needsUpdate = true;
+                    }
+
+                    if (existingSuperAdmin.RoleId != RoleKeys.SuperAdminId)
+                    {
+                        existingSuperAdmin.RoleId = RoleKeys.SuperAdminId;
+                        needsUpdate = true;
+                    }
+
+                    if (needsUpdate)
+                    {
+                        dbContext.Users.Update(existingSuperAdmin);
+                        await dbContext.SaveChangesAsync();
+                        Console.WriteLine("[SEED] Usuario Superadmin existente corregido (rol y/o tenant propietario).");
+                    }
                 }
             }
 

@@ -29,12 +29,13 @@ namespace BackendAPI.Services
             return Task.CompletedTask;
         }
 
-        public Task SendWelcomeEmailAsync(string email, string tempPassword, string companyName)
+        public Task SendWelcomeEmailAsync(string email, string tempPassword, string companyName, string roleName)
         {
             var logMessage = $"\n==================================================\n" +
                              $"[MOCK EMAIL] Enviando bienvenida y contraseña temporal\n" +
                              $"Destinatario: {email}\n" +
                              $"Empresa: {companyName}\n" +
+                             $"Rol Asignado: {roleName}\n" +
                              $"Contraseña Temporal: {tempPassword}\n" +
                              $"==================================================\n";
             

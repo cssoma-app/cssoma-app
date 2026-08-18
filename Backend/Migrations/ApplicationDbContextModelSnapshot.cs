@@ -22,6 +22,41 @@ namespace BackendAPI.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("BackendAPI.Models.DashboardCard", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TabKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("DashboardCards");
+                });
+
             modelBuilder.Entity("BackendAPI.Models.Document", b =>
                 {
                     b.Property<Guid>("Id")
@@ -83,6 +118,31 @@ namespace BackendAPI.Migrations
                     b.ToTable("Employees");
                 });
 
+            modelBuilder.Entity("BackendAPI.Models.Role", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsSystemRole")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("Roles");
+                });
+
             modelBuilder.Entity("BackendAPI.Models.SassService", b =>
                 {
                     b.Property<int>("Id")
@@ -98,11 +158,21 @@ namespace BackendAPI.Migrations
                     b.Property<bool>("IsEnabled")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("ParentKey")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
 
                     b.ToTable("SassServices");
                 });
@@ -121,6 +191,9 @@ namespace BackendAPI.Migrations
                         .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPlatformOwner")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")
@@ -154,19 +227,31 @@ namespace BackendAPI.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("FailedLoginAttempts")
+                        .HasColumnType("integer");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsDisabled")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsTemporaryPassword")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LockedUntil")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("SupabaseAuthId")
                         .IsRequired()
@@ -177,12 +262,74 @@ namespace BackendAPI.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("RoleId");
+
                     b.HasIndex("SupabaseAuthId")
                         .IsUnique();
 
-                    b.HasIndex("TenantId");
+                    b.HasIndex("TenantId", "IsDisabled");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("DashboardCardTenant", b =>
+                {
+                    b.Property<int>("EnabledDashboardCardsId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantsId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("EnabledDashboardCardsId", "TenantsId");
+
+                    b.HasIndex("TenantsId");
+
+                    b.ToTable("TenantDashboardCards", (string)null);
+                });
+
+            modelBuilder.Entity("DashboardCardUser", b =>
+                {
+                    b.Property<int>("EnabledDashboardCardsId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UsersId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("EnabledDashboardCardsId", "UsersId");
+
+                    b.HasIndex("UsersId");
+
+                    b.ToTable("UserDashboardCards", (string)null);
+                });
+
+            modelBuilder.Entity("SassServiceTenant", b =>
+                {
+                    b.Property<int>("EnabledServicesId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantsId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("EnabledServicesId", "TenantsId");
+
+                    b.HasIndex("TenantsId");
+
+                    b.ToTable("TenantServices", (string)null);
+                });
+
+            modelBuilder.Entity("SassServiceUser", b =>
+                {
+                    b.Property<int>("EnabledServicesId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UsersId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("EnabledServicesId", "UsersId");
+
+                    b.HasIndex("UsersId");
+
+                    b.ToTable("UserServices", (string)null);
                 });
 
             modelBuilder.Entity("BackendAPI.Models.Document", b =>
@@ -209,11 +356,84 @@ namespace BackendAPI.Migrations
 
             modelBuilder.Entity("BackendAPI.Models.User", b =>
                 {
+                    b.HasOne("BackendAPI.Models.Role", "Role")
+                        .WithMany("Users")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("BackendAPI.Models.Tenant", "Tenant")
                         .WithMany("Users")
                         .HasForeignKey("TenantId");
 
+                    b.Navigation("Role");
+
                     b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("DashboardCardTenant", b =>
+                {
+                    b.HasOne("BackendAPI.Models.DashboardCard", null)
+                        .WithMany()
+                        .HasForeignKey("EnabledDashboardCardsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BackendAPI.Models.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DashboardCardUser", b =>
+                {
+                    b.HasOne("BackendAPI.Models.DashboardCard", null)
+                        .WithMany()
+                        .HasForeignKey("EnabledDashboardCardsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BackendAPI.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UsersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SassServiceTenant", b =>
+                {
+                    b.HasOne("BackendAPI.Models.SassService", null)
+                        .WithMany()
+                        .HasForeignKey("EnabledServicesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BackendAPI.Models.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SassServiceUser", b =>
+                {
+                    b.HasOne("BackendAPI.Models.SassService", null)
+                        .WithMany()
+                        .HasForeignKey("EnabledServicesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BackendAPI.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UsersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BackendAPI.Models.Role", b =>
+                {
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("BackendAPI.Models.Tenant", b =>

@@ -9,6 +9,12 @@ namespace BackendAPI.Services
 {
     public class AuthService : IAuthService
     {
+        // Account lockout: 5 intentos fallidos de contraseña -> 15 min bloqueado. Combinado con el
+        // rate limit por IP (Program.cs, "AuthLimit") ya existente, cubre la práctica recomendada
+        // de bloqueo por IP + por cuenta.
+        private const int MaxFailedLoginAttempts = 5;
+        private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
+
         private readonly ApplicationDbContext _dbContext;
         private readonly IOTPService _otpService;
         private readonly IEmailService _emailService;
@@ -38,7 +44,7 @@ namespace BackendAPI.Services
 
             var userExists = await _dbContext.Users
                 .IgnoreQueryFilters()
-                .AnyAsync(u => u.Email.ToLower() == cleanedEmail);
+                .AnyAsync(u => u.Email.ToLower() == cleanedEmail && !u.IsDisabled);
 
             if (!userExists)
                 return false;
@@ -67,10 +73,16 @@ namespace BackendAPI.Services
             // Obtener el usuario correspondiente
             var user = await _dbContext.Users
                 .IgnoreQueryFilters()
+                .Include(u => u.Role)
+                .Include(u => u.Tenant)
                 .FirstOrDefaultAsync(u => u.Email.ToLower() == cleanedEmail);
 
-            if (user == null)
+            if (user == null || user.IsDisabled)
                 return null;
+
+            user.LastLoginAt = DateTime.UtcNow;
+            _dbContext.Users.Update(user);
+            await _dbContext.SaveChangesAsync();
 
             // Retornar un token temporal o simplemente JWT de éxito
             return _tokenService.GenerateToken(user);
@@ -85,9 +97,11 @@ namespace BackendAPI.Services
 
             var user = await _dbContext.Users
                 .IgnoreQueryFilters()
+                .Include(u => u.Role)
+                .Include(u => u.Tenant)
                 .FirstOrDefaultAsync(u => u.Email.ToLower() == cleanedEmail);
 
-            if (user == null)
+            if (user == null || user.IsDisabled)
                 return null;
 
             // Si el usuario no ha configurado una contraseña
@@ -98,6 +112,10 @@ namespace BackendAPI.Services
             var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
             if (verificationResult == PasswordVerificationResult.Failed)
                 return null;
+
+            user.LastLoginAt = DateTime.UtcNow;
+            _dbContext.Users.Update(user);
+            await _dbContext.SaveChangesAsync();
 
             // Generar y retornar JWT
             return _tokenService.GenerateToken(user);
@@ -164,6 +182,8 @@ namespace BackendAPI.Services
 
             var user = await _dbContext.Users
                 .IgnoreQueryFilters()
+                .Include(u => u.Role)
+                .Include(u => u.Tenant)
                 .FirstOrDefaultAsync(u => u.Email.ToLower() == cleanCurrent);
 
             if (user == null)
@@ -199,20 +219,45 @@ namespace BackendAPI.Services
             var user = await _dbContext.Users
                 .IgnoreQueryFilters()
                 .Include(u => u.Tenant)
+                .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Email.ToLower() == cleanedEmail);
 
+            // Mensaje genérico siempre que la contraseña no se haya verificado con éxito todavía —
+            // usuario inexistente, cuenta bloqueada o contraseña incorrecta son indistinguibles
+            // desde afuera (evita enumerar cuentas/estado por intentos de login).
             if (user == null)
                 return null;
 
-            if (user.Tenant != null && !user.Tenant.IsActive)
-                throw new ArgumentException("Tu empresa se encuentra desactivada temporalmente. Comunícate con el administrador de SSTerra.");
+            if (user.LockedUntil.HasValue && user.LockedUntil.Value > DateTime.UtcNow)
+                return null;
 
             if (string.IsNullOrWhiteSpace(user.PasswordHash))
                 return null;
 
             var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
             if (verificationResult == PasswordVerificationResult.Failed)
+            {
+                user.FailedLoginAttempts += 1;
+                if (user.FailedLoginAttempts >= MaxFailedLoginAttempts)
+                {
+                    user.LockedUntil = DateTime.UtcNow.Add(LockoutDuration);
+                }
+                await _dbContext.SaveChangesAsync();
                 return null;
+            }
+
+            // Contraseña correcta: recién acá es seguro revelar el motivo específico (ya se probó
+            // que quien pregunta conoce la contraseña real, no es un intento de enumeración).
+            if (user.Tenant != null && !user.Tenant.IsActive)
+                throw new ArgumentException("Tu empresa se encuentra desactivada temporalmente. Comunícate con el administrador de SSTerra.");
+
+            if (user.IsDisabled)
+                throw new ArgumentException("Tu cuenta ha sido desactivada. Comunícate con el administrador de tu empresa.");
+
+            user.FailedLoginAttempts = 0;
+            user.LockedUntil = null;
+            user.LastLoginAt = DateTime.UtcNow;
+            await _dbContext.SaveChangesAsync();
 
             return new LoginResult
             {
@@ -229,6 +274,8 @@ namespace BackendAPI.Services
             var cleanedEmail = email.ToLower().Trim();
             var user = await _dbContext.Users
                 .IgnoreQueryFilters()
+                .Include(u => u.Role)
+                .Include(u => u.Tenant)
                 .FirstOrDefaultAsync(u => u.Email.ToLower() == cleanedEmail);
 
             if (user == null) return null;

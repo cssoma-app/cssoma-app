@@ -18,9 +18,11 @@ namespace BackendAPI.Data
 
         public DbSet<Tenant> Tenants { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Role> Roles { get; set; }
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Document> Documents { get; set; }
         public DbSet<SassService> SassServices { get; set; }
+        public DbSet<DashboardCard> DashboardCards { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,7 +30,40 @@ namespace BackendAPI.Data
 
             // Indexes
             modelBuilder.Entity<User>().HasIndex(u => u.SupabaseAuthId).IsUnique();
+            modelBuilder.Entity<User>().HasIndex(u => new { u.TenantId, u.IsDisabled });
+            modelBuilder.Entity<Role>().HasIndex(r => r.Key).IsUnique();
             modelBuilder.Entity<Document>().HasIndex(d => new { d.TenantId, d.ExpirationDate });
+            modelBuilder.Entity<SassService>().HasIndex(s => s.Key).IsUnique();
+            modelBuilder.Entity<DashboardCard>().HasIndex(d => d.Key).IsUnique();
+
+            // Relaciones
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Role)
+                .WithMany(r => r.Users)
+                .HasForeignKey(u => u.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Many-to-many: servicios/menús habilitados por empresa y por usuario.
+            modelBuilder.Entity<Tenant>()
+                .HasMany(t => t.EnabledServices)
+                .WithMany(s => s.Tenants)
+                .UsingEntity(j => j.ToTable("TenantServices"));
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.EnabledServices)
+                .WithMany(s => s.Users)
+                .UsingEntity(j => j.ToTable("UserServices"));
+
+            // Many-to-many: tarjetas del dashboard habilitadas por empresa y por usuario.
+            modelBuilder.Entity<Tenant>()
+                .HasMany(t => t.EnabledDashboardCards)
+                .WithMany(c => c.Tenants)
+                .UsingEntity(j => j.ToTable("TenantDashboardCards"));
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.EnabledDashboardCards)
+                .WithMany(c => c.Users)
+                .UsingEntity(j => j.ToTable("UserDashboardCards"));
 
             // Global Query Filters (se evalúan en tiempo de ejecución por petición)
             modelBuilder.Entity<User>().HasQueryFilter(u => 

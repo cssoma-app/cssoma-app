@@ -7,6 +7,8 @@ namespace BackendAPI.Services
         Guid? UserId { get; }
         Guid? TenantId { get; }
         bool IsSuperAdmin { get; }
+        bool IsAdmin { get; }
+        bool IsPlatformOwnerTenant { get; }
         string? Email { get; }
     }
 }

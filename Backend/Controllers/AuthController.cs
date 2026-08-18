@@ -1,8 +1,12 @@
+using System.Linq;
 using System.Threading.Tasks;
+using BackendAPI.Contracts;
+using BackendAPI.Data;
 using BackendAPI.Helpers;
 using BackendAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 using BackendAPI.Filters;
 using Microsoft.AspNetCore.RateLimiting;
@@ -17,11 +21,67 @@ namespace BackendAPI.Controllers
     {
         private readonly IAuthService _authService;
         private readonly IOTPService _otpService;
+        private readonly ApplicationDbContext _dbContext;
+        private readonly ICurrentUserService _currentUserService;
+        private readonly IDashboardCardService _dashboardCardService;
 
-        public AuthController(IAuthService authService, IOTPService otpService)
+        public AuthController(
+            IAuthService authService,
+            IOTPService otpService,
+            ApplicationDbContext dbContext,
+            ICurrentUserService currentUserService,
+            IDashboardCardService dashboardCardService)
         {
             _authService = authService;
             _otpService = otpService;
+            _dbContext = dbContext;
+            _currentUserService = currentUserService;
+            _dashboardCardService = dashboardCardService;
+        }
+
+        // Claves de tarjeta del dashboard efectivamente visibles para el usuario autenticado
+        // (ver DashboardCardService.GetMyDashboardCardsAsync). Mismo criterio que "my-services":
+        // se pide en cada carga de /dashboard, así que queda exento del rate limit de auth.
+        [Authorize]
+        [DisableRateLimiting]
+        [HttpGet("my-dashboard-cards")]
+        public async Task<IActionResult> GetMyDashboardCards()
+        {
+            var result = await _dashboardCardService.GetMyDashboardCardsAsync();
+            return this.ToActionResult(result);
+        }
+
+        // Claves de servicio/menú efectivamente visibles para el usuario autenticado, usadas por
+        // el sidebar del frontend. SuperAdmin queda exento: siempre ve todo, sin depender de este
+        // catálogo (evita que una mala configuración lo deje sin acceso a la propia plataforma).
+        // [DisableRateLimiting]: "AuthLimit" (5/min) es para frenar fuerza bruta en login/OTP —
+        // este endpoint se pide en cada navegación de página (ver DashboardLayout), no es un
+        // vector de auth, y con ese límite se agotaba a los pocos clicks dejando el menú vacío.
+        [Authorize]
+        [DisableRateLimiting]
+        [HttpGet("my-services")]
+        public async Task<IActionResult> GetMyServices()
+        {
+            if (_currentUserService.IsSuperAdmin)
+            {
+                return Ok(new { All = true, Keys = System.Array.Empty<string>() });
+            }
+
+            if (!_currentUserService.UserId.HasValue)
+            {
+                return Unauthorized();
+            }
+
+            var keys = await _dbContext.Users
+                .IgnoreQueryFilters()
+                .Where(u => u.Id == _currentUserService.UserId.Value)
+                .SelectMany(u => u.EnabledServices)
+                .Where(s => s.IsEnabled)
+                .Select(s => s.Key)
+                .Distinct()
+                .ToListAsync();
+
+            return Ok(new { All = false, Keys = keys });
         }
 
         [HttpPost("request-code")]
@@ -206,40 +266,5 @@ namespace BackendAPI.Controllers
                 return BadRequest(new { Message = ex.Message });
             }
         }
-    }
-
-    public class ChangeTempPasswordRequest
-    {
-        public string NewPassword { get; set; } = string.Empty;
-    }
-
-    public class UpdateProfileRequest
-    {
-        public string NewName { get; set; } = string.Empty;
-        public string NewEmail { get; set; } = string.Empty;
-    }
-
-    public class RequestCodeRequest
-    {
-        public string Email { get; set; } = string.Empty;
-    }
-
-    public class VerifyCodeRequest
-    {
-        public string Email { get; set; } = string.Empty;
-        public string Code { get; set; } = string.Empty;
-    }
-
-    public class LoginPasswordRequest
-    {
-        public string Email { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-    }
-
-    public class SetPasswordRequest
-    {
-        public string Email { get; set; } = string.Empty;
-        public string Code { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
     }
 }

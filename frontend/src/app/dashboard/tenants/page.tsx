@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { useNotification } from "@/context/NotificationContext"
 import { getErrorMessage } from "@/lib/utils"
-import { Building, Plus, Calendar, Users, FileText, Lock, PlusCircle, MapPin, Phone, Mail, Edit, Trash2, Power, Send } from "lucide-react"
+import { Building, Plus, Calendar, Users, FileText, Lock, PlusCircle, MapPin, Phone, Mail, Edit, Trash2, Power, Send, LayoutGrid, LayoutDashboard } from "lucide-react"
 
 interface Tenant {
   id: string
@@ -20,6 +20,24 @@ interface Tenant {
   usersCount: number
   employeesCount: number
   documentsCount: number
+  serviceIds: number[]
+  dashboardCardIds: number[]
+}
+
+interface ServiceOption {
+  id: number
+  name: string
+  description: string
+  isEnabled: boolean
+}
+
+interface DashboardCardOption {
+  id: number
+  key: string
+  tabKey: string
+  name: string
+  description: string
+  isEnabled: boolean
 }
 
 export default function TenantsPage() {
@@ -41,6 +59,8 @@ export default function TenantsPage() {
   const [telefono, setTelefono] = useState("")
   const [adminEmail, setAdminEmail] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [serviceIds, setServiceIds] = useState<number[]>([])
+  const [dashboardCardIds, setDashboardCardIds] = useState<number[]>([])
 
   // Estados Formulario de Edición
   const [editName, setEditName] = useState("")
@@ -48,6 +68,11 @@ export default function TenantsPage() {
   const [editNitRuc, setEditNitRuc] = useState("")
   const [editDireccion, setEditDireccion] = useState("")
   const [editTelefono, setEditTelefono] = useState("")
+  const [editServiceIds, setEditServiceIds] = useState<number[]>([])
+  const [editDashboardCardIds, setEditDashboardCardIds] = useState<number[]>([])
+
+  const [allServices, setAllServices] = useState<ServiceOption[]>([])
+  const [allDashboardCards, setAllDashboardCards] = useState<DashboardCardOption[]>([])
 
   const getCookie = (name: string) => {
     const value = `; ${document.cookie}`;
@@ -86,9 +111,50 @@ export default function TenantsPage() {
     }
   }
 
+  const fetchAllServices = async () => {
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5166"
+      const token = getCookie("token")
+      const response = await fetch(`${apiBaseUrl}/api/services`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }
+      })
+      if (!response.ok) return
+      const data = await response.json()
+      setAllServices(data)
+      setServiceIds(data.map((s: ServiceOption) => s.id)) // por defecto, todo habilitado al crear
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const fetchAllDashboardCards = async () => {
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5166"
+      const token = getCookie("token")
+      const response = await fetch(`${apiBaseUrl}/api/dashboard-cards`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }
+      })
+      if (!response.ok) return
+      const data = await response.json()
+      setAllDashboardCards(data)
+      setDashboardCardIds(data.map((c: DashboardCardOption) => c.id)) // por defecto, todo habilitado al crear
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   useEffect(() => {
     fetchTenants()
+    fetchAllServices()
+    fetchAllDashboardCards()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const toggleServiceId = (id: number, list: number[], setList: (v: number[]) => void) => {
+    setList(list.includes(id) ? list.filter((s) => s !== id) : [...list, id])
+  }
 
   const handleCreateTenant = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -104,13 +170,15 @@ export default function TenantsPage() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ 
-          name, 
-          razonSocial, 
-          nitRuc, 
-          direccion, 
-          telefono, 
-          adminEmail 
+        body: JSON.stringify({
+          name,
+          razonSocial,
+          nitRuc,
+          direccion,
+          telefono,
+          adminEmail,
+          serviceIds,
+          dashboardCardIds
         })
       })
 
@@ -120,7 +188,7 @@ export default function TenantsPage() {
       }
 
       showSuccess("Empresa Registrada", `La empresa comercial "${name}" ha sido creada exitosamente. Se ha enviado la contraseña temporal al correo: ${adminEmail}`)
-      
+
       // Limpiar campos
       setName("")
       setRazonSocial("")
@@ -128,6 +196,8 @@ export default function TenantsPage() {
       setDireccion("")
       setTelefono("")
       setAdminEmail("")
+      setServiceIds(allServices.map((s) => s.id))
+      setDashboardCardIds(allDashboardCards.map((c) => c.id))
       setIsCreateModalOpen(false)
       fetchTenants()
     } catch (err) {
@@ -144,6 +214,8 @@ export default function TenantsPage() {
     setEditNitRuc(tenant.nitRuc)
     setEditDireccion(tenant.direccion || "")
     setEditTelefono(tenant.telefono || "")
+    setEditServiceIds(tenant.serviceIds || [])
+    setEditDashboardCardIds(tenant.dashboardCardIds || [])
     setIsEditModalOpen(true)
   }
 
@@ -162,12 +234,14 @@ export default function TenantsPage() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ 
-          name: editName, 
-          razonSocial: editRazonSocial, 
-          nitRuc: editNitRuc, 
-          direccion: editDireccion, 
-          telefono: editTelefono 
+        body: JSON.stringify({
+          name: editName,
+          razonSocial: editRazonSocial,
+          nitRuc: editNitRuc,
+          direccion: editDireccion,
+          telefono: editTelefono,
+          serviceIds: editServiceIds,
+          dashboardCardIds: editDashboardCardIds
         })
       })
 
@@ -583,6 +657,46 @@ export default function TenantsPage() {
                   </div>
                 </div>
 
+                <div className="border-t border-border/50 pt-4 space-y-3">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <LayoutGrid size={16} className="text-primary" />
+                    Servicios Disponibles
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {allServices.map((s) => (
+                      <label key={s.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={serviceIds.includes(s.id)}
+                          onChange={() => toggleServiceId(s.id, serviceIds, setServiceIds)}
+                          className="rounded border-border"
+                        />
+                        {s.name}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-border/50 pt-4 space-y-3">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <LayoutDashboard size={16} className="text-primary" />
+                    Tarjetas del Dashboard
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {allDashboardCards.map((c) => (
+                      <label key={c.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={dashboardCardIds.includes(c.id)}
+                          onChange={() => toggleServiceId(c.id, dashboardCardIds, setDashboardCardIds)}
+                          className="rounded border-border"
+                        />
+                        {c.name}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="flex gap-3 pt-4">
                   <button
                     type="button"
@@ -676,6 +790,48 @@ export default function TenantsPage() {
                     placeholder="Calle, Ciudad, País"
                     className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
                   />
+                </div>
+
+                <div className="border-t border-border/50 pt-4 space-y-3">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <LayoutGrid size={16} className="text-primary" />
+                    Servicios Disponibles
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {allServices.map((s) => (
+                      <label key={s.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={editServiceIds.includes(s.id)}
+                          onChange={() => toggleServiceId(s.id, editServiceIds, setEditServiceIds)}
+                          className="rounded border-border"
+                        />
+                        {s.name}
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Quitar un servicio también lo quita a todos los usuarios de la empresa que lo tuvieran habilitado.</p>
+                </div>
+
+                <div className="border-t border-border/50 pt-4 space-y-3">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <LayoutDashboard size={16} className="text-primary" />
+                    Tarjetas del Dashboard
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {allDashboardCards.map((c) => (
+                      <label key={c.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={editDashboardCardIds.includes(c.id)}
+                          onChange={() => toggleServiceId(c.id, editDashboardCardIds, setEditDashboardCardIds)}
+                          className="rounded border-border"
+                        />
+                        {c.name}
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Quitar una tarjeta también la quita a todos los usuarios de la empresa que la tuvieran habilitada.</p>
                 </div>
 
                 <div className="flex gap-3 pt-4">

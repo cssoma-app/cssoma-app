@@ -34,6 +34,23 @@ namespace BackendAPI.Helpers
         }
 
         /// <summary>
+        /// Sanitiza texto libre ingresado por el usuario (ej. nombres) aplicando
+        /// normalización Unicode FormC y removiendo etiquetas/caracteres de inyección,
+        /// sin forzar minúsculas.
+        /// </summary>
+        public static string SanitizeText(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return string.Empty;
+
+            var normalized = text.Normalize(NormalizationForm.FormC).Trim();
+            var sanitized = TagRegex.Replace(normalized, string.Empty);
+            sanitized = InjectionRegex.Replace(sanitized, string.Empty);
+
+            return sanitized;
+        }
+
+        /// <summary>
         /// Sanitiza una contraseña aplicando normalización Unicode FormC
         /// y protegiéndola contra inyecciones de código HTML/Tags y SQL básicos,
         /// sin alterar caracteres especiales válidos de contraseñas.

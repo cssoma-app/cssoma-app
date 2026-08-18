@@ -53,6 +53,10 @@ builder.Services.AddScoped<IOTPService, OTPService>();
 builder.Services.AddScoped<IEmailService, ResendEmailService>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITenantService, TenantService>();
+builder.Services.AddScoped<IDashboardCardService, DashboardCardService>();
 builder.Services.AddScoped<Microsoft.AspNetCore.Identity.IPasswordHasher<BackendAPI.Models.User>, Microsoft.AspNetCore.Identity.PasswordHasher<BackendAPI.Models.User>>();
 
 // Configure CORS

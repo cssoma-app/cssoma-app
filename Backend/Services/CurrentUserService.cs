@@ -47,15 +47,31 @@ namespace BackendAPI.Services
             get
             {
                 var roleClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Role);
-                if (roleClaim != null)
-                {
-                    return roleClaim.Value == UserRole.SuperAdmin.ToString();
-                }
-                return false;
+                return roleClaim != null && roleClaim.Value == RoleKeys.SuperAdmin;
             }
         }
 
-        public string? Email => _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value 
+        public bool IsAdmin
+        {
+            get
+            {
+                var roleClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Role);
+                return roleClaim != null && roleClaim.Value == RoleKeys.Admin;
+            }
+        }
+
+        // true si el tenant del usuario autenticado es el tenant propietario de la plataforma
+        // (SSTerra Consultores) — ver Tenant.IsPlatformOwner y claim "IsPlatformOwner" en JwtTokenService.
+        public bool IsPlatformOwnerTenant
+        {
+            get
+            {
+                var claim = _httpContextAccessor.HttpContext?.User?.FindFirst("IsPlatformOwner");
+                return claim != null && claim.Value == "true";
+            }
+        }
+
+        public string? Email => _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value
                              ?? _httpContextAccessor.HttpContext?.User?.FindFirst("email")?.Value;
     }
 }
