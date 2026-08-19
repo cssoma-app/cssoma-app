@@ -10,6 +10,7 @@ import {
   ScrollText, ClipboardCheck, CalendarCheck, Archive, Presentation, MessageSquare, ShoppingCart, Building2,
   BookOpen, ListOrdered, HeartPulse, Siren, AlertOctagon, Briefcase,
   FileText, HardHat, Stethoscope, Lock, Leaf, Droplet, Wrench, Settings, Activity, Megaphone,
+  BarChart3, Eye, Scale, TrendingUp,
 } from "lucide-react"
 
 type PhvaTab = "planear" | "hacer" | "verificar" | "actuar" | "registros"
@@ -602,9 +603,263 @@ const HACER_SUBTABS: SubTabGroup[] = [
   { key: "hacer-contratistas", label: "Gestión de Contratistas", icon: Briefcase, items: CONTRATISTAS_ITEMS },
 ]
 
-const SUBTABS_BY_TAB: Partial<Record<PhvaTab, SubTabGroup[]>> = {
+const INDICADORES_ITEMS: RecursoItem[] = [
+  {
+    label: "Fichas técnicas de indicadores de estructura, proceso y resultado",
+    icon: FileText,
+    fields: [
+      { key: "nombreIndicador", label: "Nombre del Indicador", type: "text", required: true },
+      { key: "tipo", label: "Tipo", type: "select", required: true, options: ["Estructura", "Proceso", "Resultado"] },
+      { key: "formula", label: "Fórmula de Cálculo", type: "text" },
+      { key: "meta", label: "Meta", type: "text" },
+      SOPORTE_FIELD,
+    ],
+  },
+  {
+    label: "Seguimiento a indicadores SST",
+    icon: BarChart3,
+    fields: [
+      { key: "indicador", label: "Indicador", type: "text", required: true },
+      { key: "periodo", label: "Periodo", type: "text", required: true, placeholder: "Ej. 2026-T1" },
+      { key: "resultado", label: "Resultado Obtenido", type: "text", required: true },
+      { key: "fecha", label: "Fecha", type: "date", required: true },
+      SOPORTE_FIELD,
+      OBSERVACIONES_FIELD,
+    ],
+  },
+]
+
+const AUTOEVALUACION_ITEMS: RecursoItem[] = [
+  {
+    label: "Autoevaluación de Estándares Mínimos Resolución 0312",
+    icon: ClipboardCheck,
+    fields: [
+      { key: "fecha", label: "Fecha de Autoevaluación", type: "date", required: true },
+      { key: "porcentaje", label: "% de Cumplimiento Obtenido", type: "number", required: true },
+      { key: "valoracion", label: "Valoración", type: "select", options: ["Crítico", "Moderadamente Aceptable", "Aceptable"] },
+      SOPORTE_REQUERIDO_FIELD,
+      OBSERVACIONES_FIELD,
+    ],
+  },
+]
+
+const AUDITORIA_ITEMS: RecursoItem[] = [
+  {
+    label: "Programa y plan de auditoría interna SG-SST",
+    icon: CalendarCheck,
+    fields: [
+      { key: "fechaAprobacion", label: "Fecha de Aprobación", type: "date", required: true },
+      { key: "version", label: "Versión", type: "text" },
+      SOPORTE_REQUERIDO_FIELD,
+      OBSERVACIONES_FIELD,
+    ],
+  },
+  {
+    label: "Informe de auditoría y hallazgos",
+    icon: Search,
+    fields: [
+      { key: "fechaAuditoria", label: "Fecha de Auditoría", type: "date", required: true },
+      { key: "auditor", label: "Auditor", type: "text", required: true },
+      { key: "hallazgos", label: "Hallazgos", type: "textarea", required: true },
+      SOPORTE_FIELD,
+    ],
+  },
+]
+
+const REVISION_DIRECCION_ITEMS: RecursoItem[] = [
+  {
+    label: "Revisión por la alta dirección",
+    icon: Eye,
+    fields: [
+      { key: "fecha", label: "Fecha", type: "date", required: true },
+      { key: "responsable", label: "Presentada por", type: "text", required: true },
+      { key: "conclusiones", label: "Conclusiones / Decisiones", type: "textarea" },
+      SOPORTE_FIELD,
+    ],
+  },
+]
+
+const CUMPLIMIENTO_LEGAL_ITEMS: RecursoItem[] = [
+  {
+    label: "Evaluación de cumplimiento de requisitos legales",
+    icon: Scale,
+    fields: [
+      { key: "fecha", label: "Fecha de Evaluación", type: "date", required: true },
+      { key: "porcentaje", label: "% de Cumplimiento", type: "number" },
+      { key: "responsable", label: "Responsable", type: "text" },
+      SOPORTE_REQUERIDO_FIELD,
+      OBSERVACIONES_FIELD,
+    ],
+  },
+]
+
+const VERIFICAR_SUBTABS: SubTabGroup[] = [
+  { key: "verificar-indicadores", label: "Indicadores", icon: BarChart3, items: INDICADORES_ITEMS },
+  { key: "verificar-autoevaluacion", label: "Autoevaluación", icon: ClipboardCheck, items: AUTOEVALUACION_ITEMS },
+  { key: "verificar-auditoria", label: "Auditoría", icon: Search, items: AUDITORIA_ITEMS },
+  { key: "verificar-revision", label: "Revisión por Dirección", icon: Eye, items: REVISION_DIRECCION_ITEMS },
+  { key: "verificar-legal", label: "Cumplimiento Legal", icon: Scale, items: CUMPLIMIENTO_LEGAL_ITEMS },
+]
+
+const MEJORAMIENTO_ITEMS: RecursoItem[] = [
+  {
+    label: "Procedimiento de acciones correctivas, preventivas y de mejora",
+    icon: ScrollText,
+    fields: [
+      { key: "fechaAprobacion", label: "Fecha de Aprobación", type: "date", required: true },
+      { key: "version", label: "Versión", type: "text" },
+      SOPORTE_REQUERIDO_FIELD,
+      OBSERVACIONES_FIELD,
+    ],
+  },
+  {
+    label: "Plan de mejoramiento derivado de autoevaluación 0312",
+    icon: ListOrdered,
+    fields: [
+      { key: "fecha", label: "Fecha del Plan", type: "date", required: true },
+      { key: "responsable", label: "Responsable", type: "text", required: true },
+      SOPORTE_FIELD,
+      OBSERVACIONES_FIELD,
+    ],
+  },
+  {
+    label: "Seguimiento y verificación de eficacia de acciones",
+    icon: ClipboardCheck,
+    fields: [
+      { key: "accion", label: "Acción a Verificar", type: "text", required: true },
+      { key: "fecha", label: "Fecha", type: "date", required: true },
+      { key: "resultado", label: "Resultado", type: "select", options: ["Eficaz", "No Eficaz", "Pendiente"] },
+      SOPORTE_FIELD,
+      OBSERVACIONES_FIELD,
+    ],
+  },
+  {
+    label: "Lecciones aprendidas y mejora continua",
+    icon: BookOpen,
+    fields: [
+      { key: "tema", label: "Tema / Situación", type: "text", required: true },
+      { key: "leccion", label: "Lección Aprendida", type: "textarea", required: true },
+      { key: "fecha", label: "Fecha", type: "date" },
+      SOPORTE_FIELD,
+    ],
+  },
+]
+
+const ACTUAR_SUBTABS: SubTabGroup[] = [
+  { key: "actuar-mejoramiento", label: "Mejoramiento", icon: TrendingUp, items: MEJORAMIENTO_ITEMS },
+]
+
+const REGISTROS_CAPACITACION_ITEMS: RecursoItem[] = [
+  {
+    label: "Registros de capacitación, formación y entrenamiento SST",
+    icon: GraduationCap,
+    fields: [
+      { key: "trabajador", label: "Nombre del Trabajador", type: "text", required: true },
+      { key: "tema", label: "Tema", type: "text", required: true },
+      { key: "fecha", label: "Fecha", type: "date", required: true },
+      { key: "intensidad", label: "Intensidad Horaria (horas)", type: "number" },
+      SOPORTE_FIELD,
+    ],
+  },
+]
+
+const REGISTROS_EPP_ITEMS: RecursoItem[] = [
+  {
+    label: "Registro de suministro de EPP",
+    icon: HardHat,
+    fields: [
+      { key: "trabajador", label: "Nombre del Trabajador", type: "text", required: true },
+      { key: "epp", label: "Elemento de Protección Personal", type: "text", required: true },
+      { key: "fecha", label: "Fecha de Entrega", type: "date", required: true },
+      { key: "cantidad", label: "Cantidad", type: "number" },
+      SOPORTE_FIELD,
+    ],
+  },
+]
+
+const REGISTROS_INSPECCIONES_ITEMS: RecursoItem[] = [
+  {
+    label: "Registros de inspecciones de seguridad",
+    icon: Search,
+    fields: [
+      { key: "area", label: "Área Inspeccionada", type: "text", required: true },
+      { key: "fecha", label: "Fecha", type: "date", required: true },
+      { key: "inspector", label: "Inspector", type: "text", required: true },
+      { key: "hallazgos", label: "Hallazgos", type: "textarea" },
+      SOPORTE_FIELD,
+    ],
+  },
+]
+
+const REGISTROS_REUNIONES_ITEMS: RecursoItem[] = [
+  {
+    label: "Actas COPASST / Vigía SST",
+    icon: Users,
+    fields: [
+      { key: "tipoComite", label: "Tipo de Comité", type: "select", required: true, options: ["COPASST", "Vigía SST"] },
+      { key: "fecha", label: "Fecha", type: "date", required: true },
+      { key: "temas", label: "Temas Tratados", type: "textarea" },
+      { key: "soporte", label: "Acta", type: "file", required: true },
+    ],
+  },
+]
+
+const REGISTROS_EMERGENCIAS_ITEMS: RecursoItem[] = [
+  {
+    label: "Registros de simulacros y capacitaciones de emergencia",
+    icon: Siren,
+    fields: [
+      { key: "tipo", label: "Tipo", type: "select", required: true, options: ["Simulacro", "Capacitación"] },
+      { key: "fecha", label: "Fecha", type: "date", required: true },
+      { key: "participantes", label: "N° de Participantes", type: "number" },
+      SOPORTE_FIELD,
+    ],
+  },
+]
+
+const REGISTROS_ACCIDENTES_ITEMS: RecursoItem[] = [
+  {
+    label: "Registros de accidentes, incidentes e investigaciones",
+    icon: AlertOctagon,
+    fields: [
+      { key: "trabajador", label: "Nombre del Trabajador", type: "text", required: true },
+      { key: "fecha", label: "Fecha del Evento", type: "date", required: true },
+      { key: "tipo", label: "Tipo", type: "select", required: true, options: ["Accidente", "Incidente"] },
+      { key: "descripcion", label: "Descripción", type: "textarea", required: true },
+      SOPORTE_FIELD,
+    ],
+  },
+]
+
+const REGISTROS_AUSENTISMO_ITEMS: RecursoItem[] = [
+  {
+    label: "Registro estadístico de ausentismo por enfermedad",
+    icon: HeartPulse,
+    fields: [
+      { key: "periodo", label: "Periodo", type: "text", required: true, placeholder: "Ej. 2026-T1" },
+      { key: "dias", label: "Días de Ausentismo", type: "number", required: true },
+      { key: "causa", label: "Causa Principal", type: "text" },
+      SOPORTE_FIELD,
+    ],
+  },
+]
+
+const REGISTROS_SUBTABS: SubTabGroup[] = [
+  { key: "registros-capacitacion", label: "Capacitación", icon: GraduationCap, items: REGISTROS_CAPACITACION_ITEMS },
+  { key: "registros-epp", label: "EPP", icon: HardHat, items: REGISTROS_EPP_ITEMS },
+  { key: "registros-inspecciones", label: "Inspecciones", icon: Search, items: REGISTROS_INSPECCIONES_ITEMS },
+  { key: "registros-reuniones", label: "Reuniones", icon: Users, items: REGISTROS_REUNIONES_ITEMS },
+  { key: "registros-emergencias", label: "Emergencias", icon: Siren, items: REGISTROS_EMERGENCIAS_ITEMS },
+  { key: "registros-accidentes", label: "Accidentes", icon: AlertOctagon, items: REGISTROS_ACCIDENTES_ITEMS },
+  { key: "registros-ausentismo", label: "Ausentismo", icon: HeartPulse, items: REGISTROS_AUSENTISMO_ITEMS },
+]
+
+const SUBTABS_BY_TAB: Record<PhvaTab, SubTabGroup[]> = {
   planear: PLANEAR_SUBTABS,
   hacer: HACER_SUBTABS,
+  verificar: VERIFICAR_SUBTABS,
+  actuar: ACTUAR_SUBTABS,
+  registros: REGISTROS_SUBTABS,
 }
 
 type ItemStatus = "pendiente" | "cumplido" | "no-obligatorio"
@@ -651,7 +906,6 @@ function EmptyState() {
 export default function SgSstDisenoPage() {
   const [activeTab, setActiveTab] = useState<PhvaTab>("planear")
   const [openSubTabs, setOpenSubTabs] = useState<Set<string>>(new Set(["recursos"]))
-  const active = TABS.find((t) => t.key === activeTab)!
   const activeSubGroups = SUBTABS_BY_TAB[activeTab]
   const { showSuccess } = useNotification()
 
@@ -731,8 +985,7 @@ export default function SgSstDisenoPage() {
           })}
         </div>
 
-        {activeSubGroups ? (
-          <div className="space-y-3">
+        <div className="space-y-3">
             {activeSubGroups.map((sub) => {
               const Icon = sub.icon
               const isOpen = openSubTabs.has(sub.key)
@@ -803,21 +1056,7 @@ export default function SgSstDisenoPage() {
                 </div>
               )
             })}
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-border/50 bg-background/50 backdrop-blur-xl shadow-lg overflow-hidden">
-            <div className="p-6 border-b border-border/50 bg-background/40">
-              <h3 className="text-lg font-semibold tracking-tight flex items-center gap-2">
-                <active.icon size={18} className="text-primary" />
-                {active.label}
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1">{active.description}</p>
-            </div>
-            <div className="p-8">
-              <EmptyState />
-            </div>
-          </div>
-        )}
+        </div>
 
         {openItem && (
           <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-10 sm:pt-16 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
