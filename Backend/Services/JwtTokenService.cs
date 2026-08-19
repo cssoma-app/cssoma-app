@@ -34,6 +34,7 @@ namespace BackendAPI.Services
                 new Claim(ClaimTypes.Role, user.Role?.Key ?? string.Empty),
                 new Claim("FullName", user.FullName ?? string.Empty),
                 new Claim("TenantId", user.TenantId?.ToString() ?? string.Empty),
+                new Claim("TenantName", user.Tenant?.Name ?? string.Empty),
                 new Claim("IsPlatformOwner", (user.Tenant?.IsPlatformOwner ?? false) ? "true" : "false")
             };
 

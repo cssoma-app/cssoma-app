@@ -566,7 +566,7 @@ export default function TenantsPage() {
 
         {/* Create Company Modal */}
         {isCreateModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-10 sm:pt-16 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
             <div className="w-full max-w-lg rounded-3xl border border-border/50 bg-background p-6 shadow-2xl space-y-6 my-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -662,7 +662,7 @@ export default function TenantsPage() {
                     <LayoutGrid size={16} className="text-primary" />
                     Servicios Disponibles
                   </h4>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto rounded-xl border border-border/50 p-2">
                     {allServices.map((s) => (
                       <label key={s.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
                         <input
@@ -682,7 +682,7 @@ export default function TenantsPage() {
                     <LayoutDashboard size={16} className="text-primary" />
                     Tarjetas del Dashboard
                   </h4>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto rounded-xl border border-border/50 p-2">
                     {allDashboardCards.map((c) => (
                       <label key={c.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
                         <input
@@ -720,7 +720,7 @@ export default function TenantsPage() {
 
         {/* Edit Company Modal */}
         {isEditModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-10 sm:pt-16 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
             <div className="w-full max-w-lg rounded-3xl border border-border/50 bg-background p-6 shadow-2xl space-y-6 my-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -797,7 +797,7 @@ export default function TenantsPage() {
                     <LayoutGrid size={16} className="text-primary" />
                     Servicios Disponibles
                   </h4>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto rounded-xl border border-border/50 p-2">
                     {allServices.map((s) => (
                       <label key={s.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
                         <input
@@ -818,7 +818,7 @@ export default function TenantsPage() {
                     <LayoutDashboard size={16} className="text-primary" />
                     Tarjetas del Dashboard
                   </h4>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto rounded-xl border border-border/50 p-2">
                     {allDashboardCards.map((c) => (
                       <label key={c.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
                         <input

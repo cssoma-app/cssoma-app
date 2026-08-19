@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { useNotification } from "@/context/NotificationContext"
 import { getErrorMessage } from "@/lib/utils"
-import { UserCog, Plus, Search, Edit, Trash2, Power, Send, ChevronLeft, ChevronRight, Building2, LayoutGrid, LayoutDashboard } from "lucide-react"
+import { UserCog, Plus, Search, Edit, Trash2, Power, Send, ChevronLeft, ChevronRight, Building2, LayoutGrid, LayoutDashboard, Bell } from "lucide-react"
 
 interface UserRow {
   id: string
@@ -71,6 +71,12 @@ export default function UsersPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<UserRow | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false)
+  const [alertTargetUser, setAlertTargetUser] = useState<UserRow | null>(null)
+  const [alertTitle, setAlertTitle] = useState("")
+  const [alertMessage, setAlertMessage] = useState("")
+  const [isSendingAlert, setIsSendingAlert] = useState(false)
 
   const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
@@ -409,6 +415,44 @@ export default function UsersPage() {
     }
   }
 
+  const handleOpenAlertModal = (user: UserRow) => {
+    setAlertTargetUser(user)
+    setAlertTitle("")
+    setAlertMessage("")
+    setIsAlertModalOpen(true)
+  }
+
+  const handleSendAlert = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!alertTargetUser) return
+    setIsSendingAlert(true)
+
+    try {
+      const token = getCookie("token")
+      const response = await fetch(`${apiBaseUrl}/api/alerts`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+          "Idempotency-Key": crypto.randomUUID()
+        },
+        body: JSON.stringify({ recipientUserId: alertTargetUser.id, title: alertTitle, message: alertMessage })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || errorData.Message || "Error al enviar la alerta.")
+      }
+
+      showSuccess("Alerta Enviada", `Se envió la alerta a "${alertTargetUser.fullName}".`)
+      setIsAlertModalOpen(false)
+    } catch (err) {
+      showError("Error de Envío", getErrorMessage(err, "No se pudo enviar la alerta."))
+    } finally {
+      setIsSendingAlert(false)
+    }
+  }
+
   const triggerResendInvitation = (user: UserRow) => {
     showConfirm(
       "Reenviar Invitación",
@@ -551,6 +595,21 @@ export default function UsersPage() {
 
                               <div className="relative group">
                                 <button
+                                  disabled={!manageable}
+                                  onClick={() => handleOpenAlertModal(user)}
+                                  className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                                >
+                                  <Bell size={16} />
+                                </button>
+                                {manageable && (
+                                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1 bg-slate-950 text-slate-50 border border-slate-800 dark:bg-white dark:text-slate-950 dark:border-slate-200 text-[11px] font-semibold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-md z-30">
+                                    Enviar Alerta
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="relative group">
+                                <button
                                   disabled={!manageable || !user.isTemporaryPassword}
                                   onClick={() => triggerResendInvitation(user)}
                                   className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:pointer-events-none"
@@ -631,7 +690,7 @@ export default function UsersPage() {
         )}
 
         {isCreateModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-10 sm:pt-16 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
             <div className="w-full max-w-lg rounded-3xl border border-border/50 bg-background p-6 shadow-2xl space-y-6 my-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -704,7 +763,7 @@ export default function UsersPage() {
                       <LayoutGrid size={16} className="text-primary" />
                       Servicios que puede ver
                     </h4>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto rounded-xl border border-border/50 p-2">
                       {availableServices.map((s) => (
                         <label key={s.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
                           <input
@@ -726,7 +785,7 @@ export default function UsersPage() {
                       <LayoutDashboard size={16} className="text-primary" />
                       Tarjetas del Dashboard que puede ver
                     </h4>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto rounded-xl border border-border/50 p-2">
                       {availableDashboardCards.map((c) => (
                         <label key={c.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
                           <input
@@ -764,7 +823,7 @@ export default function UsersPage() {
         )}
 
         {isEditModalOpen && selectedUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-10 sm:pt-16 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
             <div className="w-full max-w-lg rounded-3xl border border-border/50 bg-background p-6 shadow-2xl space-y-6 my-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -818,7 +877,7 @@ export default function UsersPage() {
                       <LayoutGrid size={16} className="text-primary" />
                       Servicios que puede ver
                     </h4>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto rounded-xl border border-border/50 p-2">
                       {editAvailableServices.map((s) => (
                         <label key={s.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
                           <input
@@ -840,7 +899,7 @@ export default function UsersPage() {
                       <LayoutDashboard size={16} className="text-primary" />
                       Tarjetas del Dashboard que puede ver
                     </h4>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto rounded-xl border border-border/50 p-2">
                       {editAvailableDashboardCards.map((c) => (
                         <label key={c.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
                           <input
@@ -870,6 +929,67 @@ export default function UsersPage() {
                     className="flex-1 rounded-2xl bg-primary hover:bg-primary/95 py-3 font-semibold text-primary-foreground transition-all shadow-lg shadow-primary/10 disabled:opacity-50"
                   >
                     {isSubmitting ? "Guardando..." : "Guardar Cambios"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {isAlertModalOpen && alertTargetUser && (
+          <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-10 sm:pt-16 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
+            <div className="w-full max-w-md rounded-3xl border border-border/50 bg-background p-6 shadow-2xl space-y-6 my-8">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <Bell size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">Enviar Alerta</h3>
+                    <p className="text-xs text-muted-foreground">Para {alertTargetUser.fullName}</p>
+                  </div>
+                </div>
+              </div>
+
+              <form onSubmit={handleSendAlert} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Título</label>
+                  <input
+                    type="text"
+                    required
+                    value={alertTitle}
+                    onChange={(e) => setAlertTitle(e.target.value)}
+                    placeholder="Ej. Documento por vencer"
+                    className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Mensaje</label>
+                  <textarea
+                    required
+                    rows={4}
+                    value={alertMessage}
+                    onChange={(e) => setAlertMessage(e.target.value)}
+                    placeholder="Detalle de la alerta..."
+                    className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm resize-none"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsAlertModalOpen(false)}
+                    className="flex-1 rounded-2xl border border-border py-3 font-semibold text-foreground hover:bg-muted transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSendingAlert}
+                    className="flex-1 rounded-2xl bg-primary hover:bg-primary/95 py-3 font-semibold text-primary-foreground transition-all shadow-lg shadow-primary/10 disabled:opacity-50"
+                  >
+                    {isSendingAlert ? "Enviando..." : "Enviar Alerta"}
                   </button>
                 </div>
               </form>

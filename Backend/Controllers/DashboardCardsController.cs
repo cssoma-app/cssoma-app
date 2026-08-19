@@ -9,7 +9,7 @@ namespace BackendAPI.Controllers
 {
     // Controller delgado: toda la lógica de negocio vive en IDashboardCardService (Regla 2, AGENTS.md).
     [Idempotent]
-    [Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
     [ApiController]
     [Route("api/dashboard-cards")]
     public class DashboardCardsController : ControllerBase

@@ -100,5 +100,46 @@ namespace BackendAPI.Tests
             Assert.Single(cards);
             Assert.Equal("compras-mes", cards[0].Key);
         }
+
+        [Fact]
+        public async Task GetCards_AsPlatformOwnerAdmin_Succeeds()
+        {
+            _mockCurrentUser.Setup(c => c.IsSuperAdmin).Returns(false);
+            _mockCurrentUser.Setup(c => c.IsAdmin).Returns(true);
+            _mockCurrentUser.Setup(c => c.IsPlatformOwnerTenant).Returns(true);
+            var controller = BuildController();
+
+            var result = await controller.GetCards();
+
+            Assert.IsType<OkObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task GetCards_AsClientTenantAdmin_ReturnsForbid()
+        {
+            _mockCurrentUser.Setup(c => c.IsSuperAdmin).Returns(false);
+            _mockCurrentUser.Setup(c => c.IsAdmin).Returns(true);
+            _mockCurrentUser.Setup(c => c.IsPlatformOwnerTenant).Returns(false);
+            var controller = BuildController();
+
+            var result = await controller.GetCards();
+
+            Assert.IsType<ForbidResult>(result);
+        }
+
+        [Fact]
+        public async Task ToggleCard_AsClientTenantAdmin_ReturnsForbid()
+        {
+            _mockCurrentUser.Setup(c => c.IsSuperAdmin).Returns(false);
+            _mockCurrentUser.Setup(c => c.IsAdmin).Returns(true);
+            _mockCurrentUser.Setup(c => c.IsPlatformOwnerTenant).Returns(false);
+            var controller = BuildController();
+
+            var result = await controller.ToggleCard(_cardId);
+
+            Assert.IsType<ForbidResult>(result);
+            var card = await _dbContext.DashboardCards.FirstAsync(c => c.Id == _cardId);
+            Assert.True(card.IsEnabled); // no se modificó
+        }
     }
 }

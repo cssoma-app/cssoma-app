@@ -23,6 +23,7 @@ namespace BackendAPI.Data
         public DbSet<Document> Documents { get; set; }
         public DbSet<SassService> SassServices { get; set; }
         public DbSet<DashboardCard> DashboardCards { get; set; }
+        public DbSet<Alert> Alerts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -35,6 +36,7 @@ namespace BackendAPI.Data
             modelBuilder.Entity<Document>().HasIndex(d => new { d.TenantId, d.ExpirationDate });
             modelBuilder.Entity<SassService>().HasIndex(s => s.Key).IsUnique();
             modelBuilder.Entity<DashboardCard>().HasIndex(d => d.Key).IsUnique();
+            modelBuilder.Entity<Alert>().HasIndex(a => new { a.RecipientUserId, a.IsAccepted });
 
             // Relaciones
             modelBuilder.Entity<User>()
@@ -65,6 +67,13 @@ namespace BackendAPI.Data
                 .WithMany(c => c.Users)
                 .UsingEntity(j => j.ToTable("UserDashboardCards"));
 
+            // Alertas: un usuario (destinatario) tiene muchas; se borran en cascada con el usuario.
+            modelBuilder.Entity<Alert>()
+                .HasOne(a => a.Recipient)
+                .WithMany(u => u.Alerts)
+                .HasForeignKey(a => a.RecipientUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Global Query Filters (se evalúan en tiempo de ejecución por petición)
             modelBuilder.Entity<User>().HasQueryFilter(u => 
                 (_currentUserService != null && _currentUserService.IsSuperAdmin) || 
@@ -74,9 +83,13 @@ namespace BackendAPI.Data
                 (_currentUserService != null && _currentUserService.IsSuperAdmin) || 
                 e.TenantId == (_currentUserService != null && _currentUserService.TenantId.HasValue ? _currentUserService.TenantId.Value : Guid.Empty));
 
-            modelBuilder.Entity<Document>().HasQueryFilter(d => 
-                (_currentUserService != null && _currentUserService.IsSuperAdmin) || 
+            modelBuilder.Entity<Document>().HasQueryFilter(d =>
+                (_currentUserService != null && _currentUserService.IsSuperAdmin) ||
                 d.TenantId == (_currentUserService != null && _currentUserService.TenantId.HasValue ? _currentUserService.TenantId.Value : Guid.Empty));
+
+            modelBuilder.Entity<Alert>().HasQueryFilter(a =>
+                (_currentUserService != null && _currentUserService.IsSuperAdmin) ||
+                a.TenantId == (_currentUserService != null && _currentUserService.TenantId.HasValue ? _currentUserService.TenantId.Value : Guid.Empty));
         }
     }
 }

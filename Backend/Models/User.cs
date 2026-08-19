@@ -27,5 +27,7 @@ namespace BackendAPI.Models
         // Tarjetas del dashboard habilitadas para este usuario en particular, siempre subconjunto
         // de Tenant.EnabledDashboardCards. Ignorado para SuperAdmin (siempre ve todo).
         public ICollection<DashboardCard> EnabledDashboardCards { get; set; } = new List<DashboardCard>();
+        // Alertas recibidas por este usuario (ver AlertService).
+        public ICollection<Alert> Alerts { get; set; } = new List<Alert>();
     }
 }

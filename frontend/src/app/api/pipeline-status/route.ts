@@ -35,16 +35,19 @@ type GhRun = {
   actor: { login: string; avatar_url: string }
 }
 
-function requireSuperAdmin(req: NextRequest): boolean {
+// SuperAdmin o Admin del tenant propietario de la plataforma: mismo criterio que
+// HasBroadAccess en el backend (ver TenantService/UserService/ServicesService).
+function requireBroadAccess(req: NextRequest): boolean {
   const token = req.cookies.get("token")?.value
   if (!token) return false
   try {
     const payloadB64 = token.split(".")[1]
     const payload = JSON.parse(Buffer.from(payloadB64, "base64").toString("utf-8"))
     const role = payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || payload.role
+    const isPlatformOwner = payload.IsPlatformOwner === "true"
     const exp = payload.exp
     if (exp && Date.now() >= exp * 1000) return false
-    return role === "SuperAdmin"
+    return role === "SuperAdmin" || (role === "Admin" && isPlatformOwner)
   } catch {
     return false
   }
@@ -219,7 +222,7 @@ async function branchPipeline(branch: string) {
 }
 
 export async function GET(req: NextRequest) {
-  if (!requireSuperAdmin(req)) {
+  if (!requireBroadAccess(req)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 })
   }
 

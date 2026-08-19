@@ -4,28 +4,28 @@ import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { ThemeToggle } from "@/components/ThemeToggle"
-import { Home, FileText, LogOut, Building, User as UserIcon, Menu, Briefcase, GitBranch, UserCog, ShieldCheck, ChevronDown, Code2, LayoutDashboard } from "lucide-react"
+import { Home, FileText, LogOut, Building, User as UserIcon, Menu, Briefcase, GitBranch, UserCog, ShieldCheck, ChevronDown, Code2, LayoutDashboard, Bell, Check, Trash2, HardHat, ClipboardList } from "lucide-react"
 import Image from "next/image"
 
-// Patrón Map/Registry para mapear de manera escalable las rutas de Next.js a sus títulos correspondientes
-const ROUTE_TITLES: Record<string, string> = {
-  "/dashboard": "Resumen Ejecutivo",
-  "/dashboard/profile": "Datos Personales",
-  "/dashboard/users": "Gestión de Usuarios",
-  "/dashboard/tenants": "Administración de Empresas",
-  "/dashboard/admin": "Administrar",
-  "/dashboard/services": "Servicios Globales",
-  "/dashboard/dashboard-cards": "Tarjetas del Dashboard",
-  "/dashboard/pipeline": "Pipeline CI/CD",
-};
+interface AlertItem {
+  id: string
+  title: string
+  message: string
+  isAccepted: boolean
+  createdAt: string
+  senderName: string
+}
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
-  const [user, setUser] = useState<{ name: string; email: string; role: string; isPlatformOwner: boolean } | null>(null)
+  const [user, setUser] = useState<{ name: string; email: string; role: string; isPlatformOwner: boolean; tenantName: string } | null>(null)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [myServices, setMyServices] = useState<{ all: boolean; keys: string[] } | null>(null)
   const [isNavigating, setIsNavigating] = useState(false)
+  const [alerts, setAlerts] = useState<AlertItem[]>([])
+  const [isAlertsOpen, setIsAlertsOpen] = useState(false)
+  const pendingAlertsCount = alerts.filter((a) => !a.isAccepted).length
 
   const isSuperAdmin = user?.role === "SuperAdmin"
   const hasBroadAccess = isSuperAdmin || (user?.role === "Admin" && user?.isPlatformOwner)
@@ -35,20 +35,20 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   // Mientras myServices no cargó, se oculta por defecto (evita un flash de ítems sin permiso real).
   const canSeeService = (key: string) => myServices !== null && (myServices.all || myServices.keys.includes(key))
 
-  const adminGroupPaths = ["/dashboard/admin", "/dashboard/users", "/dashboard/profile", "/dashboard/services", "/dashboard/dashboard-cards"]
+  const adminGroupPaths = ["/dashboard/admin", "/dashboard/users", "/dashboard/profile", "/dashboard/services", "/dashboard/dashboard-cards", "/dashboard/tenants"]
   const devGroupPaths = ["/dashboard/pipeline"]
+  const sstGroupPaths = ["/dashboard/sgsst-diseno"]
 
   const [isAdminGroupOpen, setIsAdminGroupOpen] = useState(false)
   const [isDevGroupOpen, setIsDevGroupOpen] = useState(false)
+  const [isSstGroupOpen, setIsSstGroupOpen] = useState(false)
 
   useEffect(() => {
     if (adminGroupPaths.includes(pathname)) setIsAdminGroupOpen(true)
     if (devGroupPaths.includes(pathname)) setIsDevGroupOpen(true)
+    if (sstGroupPaths.includes(pathname)) setIsSstGroupOpen(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
-
-  // Resolver el título activo dinámicamente usando el registro de rutas
-  const activeTitle = ROUTE_TITLES[pathname] || "Dashboard";
 
   // Con <Link> (navegación cliente, sin recarga completa) el árbol viejo de DashboardLayout
   // sigue montado hasta que la página nueva está lista, así que basta con prender esta bandera
@@ -66,31 +66,79 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timeout)
   }, [isNavigating])
 
-  useEffect(() => {
-    const getCookie = (name: string) => {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop()?.split(';').shift();
-      return null;
-    };
+  const getCookie = (name: string) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift();
+    return null;
+  };
 
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5166";
+
+  const fetchAlerts = () => {
+    const token = getCookie("token");
+    if (!token) return;
+    fetch(`${apiBaseUrl}/api/alerts/mine`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setAlerts(data);
+      })
+      .catch((e) => console.error("Error loading alerts", e));
+  };
+
+  const handleAcceptAlert = async (id: string) => {
+    const token = getCookie("token");
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/alerts/${id}/accept`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+          "Idempotency-Key": crypto.randomUUID()
+        }
+      });
+      if (!response.ok) return;
+      setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, isAccepted: true } : a)));
+    } catch (e) {
+      console.error("Error accepting alert", e);
+    }
+  };
+
+  const handleDeleteAlert = async (id: string) => {
+    const token = getCookie("token");
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/alerts/${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }
+      });
+      if (!response.ok) return;
+      setAlerts((prev) => prev.filter((a) => a.id !== id));
+    } catch (e) {
+      console.error("Error deleting alert", e);
+    }
+  };
+
+  useEffect(() => {
     const token = getCookie("token");
     if (token) {
       try {
         const payloadBase64 = token.split(".")[1];
         const payloadDecoded = JSON.parse(atob(payloadBase64));
-        
+
         const name = payloadDecoded.FullName || payloadDecoded.email?.split("@")[0] || "Usuario";
         const email = payloadDecoded.email || "";
         const role = payloadDecoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || payloadDecoded.role || "Client";
         const isPlatformOwner = payloadDecoded.IsPlatformOwner === "true";
+        const tenantName = payloadDecoded.TenantName || "";
 
-        setUser({ name, email, role, isPlatformOwner });
+        setUser({ name, email, role, isPlatformOwner, tenantName });
       } catch (e) {
         console.error("Error decoding token", e);
       }
 
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5166";
       fetch(`${apiBaseUrl}/api/auth/my-services`, {
         method: "GET",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }
@@ -100,7 +148,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           if (data) setMyServices({ all: data.all ?? data.All ?? false, keys: data.keys ?? data.Keys ?? [] });
         })
         .catch((e) => console.error("Error loading my-services", e));
+
+      fetchAlerts();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLogout = () => {
@@ -174,13 +225,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 Documentos
               </a>
             )}
-            {hasBroadAccess && canSeeService("tenants") && (
-              <Link href="/dashboard/tenants" onClick={() => handleNavClick("/dashboard/tenants")} className={getLinkClass("/dashboard/tenants")}>
-                <Building size={18} />
-                Administración Empresas
-              </Link>
-            )}
-
             {/* Grupo Administrar */}
             <div>
               <button
@@ -195,6 +239,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </button>
               {isAdminGroupOpen && (
                 <div className="flex flex-col gap-1 mt-1 pl-4 border-l border-border/50 ml-4">
+                  {hasBroadAccess && canSeeService("tenants") && (
+                    <Link href="/dashboard/tenants" onClick={() => handleNavClick("/dashboard/tenants")} className={getLinkClass("/dashboard/tenants")}>
+                      <Building size={16} />
+                      Administración Empresas
+                    </Link>
+                  )}
                   {hasBroadAccess && canSeeService("roles") && (
                     <Link href="/dashboard/admin" onClick={() => handleNavClick("/dashboard/admin")} className={getLinkClass("/dashboard/admin")}>
                       <ShieldCheck size={16} />
@@ -211,13 +261,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                     <UserIcon size={16} />
                     Datos Personales
                   </Link>
-                  {isSuperAdmin && canSeeService("services") && (
+                  {hasBroadAccess && canSeeService("services") && (
                     <Link href="/dashboard/services" onClick={() => handleNavClick("/dashboard/services")} className={getLinkClass("/dashboard/services")}>
                       <Briefcase size={16} />
                       Servicios
                     </Link>
                   )}
-                  {isSuperAdmin && canSeeService("dashboard-cards") && (
+                  {hasBroadAccess && canSeeService("dashboard-cards") && (
                     <Link href="/dashboard/dashboard-cards" onClick={() => handleNavClick("/dashboard/dashboard-cards")} className={getLinkClass("/dashboard/dashboard-cards")}>
                       <LayoutDashboard size={16} />
                       Tarjetas del Dashboard
@@ -227,8 +277,30 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               )}
             </div>
 
+            {/* Grupo Seguridad y Salud (SST) */}
+            <div>
+              <button
+                onClick={() => setIsSstGroupOpen(!isSstGroupOpen)}
+                className={`flex items-center justify-between w-full gap-3 rounded-xl px-4 py-3 transition-all duration-300 ${sstGroupPaths.includes(pathname) ? "text-primary font-semibold" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+              >
+                <span className="flex items-center gap-3">
+                  <HardHat size={18} />
+                  Seguridad y Salud (SST)
+                </span>
+                <ChevronDown size={16} className={`transition-transform duration-200 ${isSstGroupOpen ? "rotate-180" : ""}`} />
+              </button>
+              {isSstGroupOpen && (
+                <div className="flex flex-col gap-1 mt-1 pl-4 border-l border-border/50 ml-4">
+                  <Link href="/dashboard/sgsst-diseno" onClick={() => handleNavClick("/dashboard/sgsst-diseno")} className={getLinkClass("/dashboard/sgsst-diseno")}>
+                    <ClipboardList size={16} />
+                    Diseño e implementación SG-SST (PYME Riesgo 1-3)
+                  </Link>
+                </div>
+              )}
+            </div>
+
             {/* Grupo Desarrollo */}
-            {isSuperAdmin && canSeeService("pipeline") && (
+            {hasBroadAccess && canSeeService("pipeline") && (
               <div>
                 <button
                   onClick={() => setIsDevGroupOpen(!isDevGroupOpen)}
@@ -280,15 +352,83 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <Menu size={20} />
           </button>
           
-          <div className="w-full flex-1">
-            <h1 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-              {activeTitle}
-            </h1>
-          </div>
-          
+          <div className="w-full flex-1" />
+
           <div className="flex items-center gap-4">
+            {user?.tenantName && (
+              <div className="hidden sm:flex items-center gap-2 rounded-full border border-border/50 bg-muted/40 px-3 py-1.5 text-sm font-medium text-foreground">
+                <Building size={14} className="text-primary shrink-0" />
+                <span className="max-w-[160px] truncate">{user.tenantName}</span>
+              </div>
+            )}
+            {/* Campana de Alertas */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  if (!isAlertsOpen) fetchAlerts();
+                  setIsAlertsOpen(!isAlertsOpen);
+                }}
+                className="relative p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50"
+                aria-label="Alertas"
+              >
+                <Bell size={20} />
+                {pendingAlertsCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white">
+                    {pendingAlertsCount > 9 ? "9+" : pendingAlertsCount}
+                  </span>
+                )}
+              </button>
+
+              {isAlertsOpen && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setIsAlertsOpen(false)} />
+                  <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-border/50 bg-background/95 backdrop-blur-xl shadow-xl z-40 animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-border/50">
+                      <p className="text-sm font-semibold text-foreground">Alertas</p>
+                      <p className="text-xs text-muted-foreground">{pendingAlertsCount} pendiente{pendingAlertsCount === 1 ? "" : "s"}</p>
+                    </div>
+                    <div className="max-h-80 overflow-y-auto divide-y divide-border/50">
+                      {alerts.length === 0 ? (
+                        <p className="px-4 py-8 text-center text-sm text-muted-foreground">Sin alertas por ahora.</p>
+                      ) : (
+                        alerts.map((a) => (
+                          <div key={a.id} className={`px-4 py-3 ${a.isAccepted ? "opacity-50" : ""}`}>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-foreground truncate">{a.title}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">{a.message}</p>
+                                <p className="text-[11px] text-muted-foreground/70 mt-1">De {a.senderName} · {new Date(a.createdAt).toLocaleDateString()}</p>
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                {!a.isAccepted && (
+                                  <button
+                                    onClick={() => handleAcceptAlert(a.id)}
+                                    className="p-1.5 rounded-lg hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 transition-colors"
+                                    aria-label="Aceptar"
+                                  >
+                                    <Check size={14} />
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handleDeleteAlert(a.id)}
+                                  className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                                  aria-label="Eliminar"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
             <ThemeToggle />
-            
+
             {/* Interactive Profile Dropdown Submenu */}
             <div className="relative">
               <div 

@@ -19,8 +19,22 @@ namespace BackendAPI.Services
             _currentUserService = currentUserService;
         }
 
+        // SuperAdmin o Admin del tenant propietario de la plataforma: mismo criterio que
+        // TenantService/UserService/ServicesService para las pantallas de configuración
+        // global de la plataforma.
+        private bool HasBroadAccess()
+        {
+            return _currentUserService.IsSuperAdmin ||
+                   (_currentUserService.IsAdmin && _currentUserService.IsPlatformOwnerTenant);
+        }
+
         public async Task<ServiceResult<List<DashboardCardDto>>> GetAllCardsAsync()
         {
+            if (!HasBroadAccess())
+            {
+                return ServiceResult<List<DashboardCardDto>>.Forbidden();
+            }
+
             var cards = await _dbContext.DashboardCards
                 .OrderBy(c => c.TabKey).ThenBy(c => c.Id)
                 .Select(c => new DashboardCardDto
@@ -39,6 +53,11 @@ namespace BackendAPI.Services
 
         public async Task<ServiceResult<DashboardCardDto>> ToggleCardAsync(int id)
         {
+            if (!HasBroadAccess())
+            {
+                return ServiceResult<DashboardCardDto>.Forbidden();
+            }
+
             var card = await _dbContext.DashboardCards.FindAsync(id);
             if (card == null)
             {
@@ -61,6 +80,11 @@ namespace BackendAPI.Services
 
         public async Task<ServiceResult<DashboardCardDto>> RenameCardAsync(int id, string name)
         {
+            if (!HasBroadAccess())
+            {
+                return ServiceResult<DashboardCardDto>.Forbidden();
+            }
+
             var nameCleaned = InputSanitizer.SanitizeText(name ?? string.Empty);
             if (string.IsNullOrWhiteSpace(nameCleaned))
             {

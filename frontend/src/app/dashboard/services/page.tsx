@@ -100,7 +100,7 @@ export default function ServicesPage() {
           </div>
           <div>
             <h2 className="text-xl font-bold text-foreground">Acceso Denegado</h2>
-            <p className="text-sm text-muted-foreground mt-2">Esta sección está reservada exclusivamente para el Administrador Global (Superadmin) de la plataforma.</p>
+            <p className="text-sm text-muted-foreground mt-2">Esta sección está reservada para la administración global de la plataforma.</p>
           </div>
         </div>
       </DashboardLayout>
