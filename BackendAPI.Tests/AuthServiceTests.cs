@@ -17,7 +17,12 @@ namespace BackendAPI.Tests
         private readonly Mock<IEmailService> _mockEmailService;
         private readonly Mock<ITokenService> _mockTokenService;
         private readonly Mock<IPasswordHasher<User>> _mockPasswordHasher;
+        private readonly Mock<ICurrentUserService> _mockCurrentUser;
         private readonly AuthService _authService;
+
+        private readonly Guid _platformTenantId = Guid.NewGuid();
+        private readonly Guid _clientTenantId = Guid.NewGuid();
+        private readonly Guid _inactiveTenantId = Guid.NewGuid();
 
         public AuthServiceTests()
         {
@@ -41,14 +46,40 @@ namespace BackendAPI.Tests
             _mockEmailService = new Mock<IEmailService>();
             _mockTokenService = new Mock<ITokenService>();
             _mockPasswordHasher = new Mock<IPasswordHasher<User>>();
+            _mockCurrentUser = new Mock<ICurrentUserService>();
 
             _authService = new AuthService(
                 _dbContext,
                 _mockOtpService.Object,
                 _mockEmailService.Object,
                 _mockTokenService.Object,
-                _mockPasswordHasher.Object
+                _mockPasswordHasher.Object,
+                _mockCurrentUser.Object
             );
+
+            _dbContext.Tenants.AddRange(
+                new Tenant { Id = _platformTenantId, Name = "SSTerra Consultores", RazonSocial = "TECHNOLO-GIS S.A.S.", NitRuc = "900.985.000-1", IsActive = true, IsPlatformOwner = true },
+                new Tenant { Id = _clientTenantId, Name = "Cliente XYZ", RazonSocial = "XYZ S.A.S.", NitRuc = "1", IsActive = true, IsPlatformOwner = false },
+                new Tenant { Id = _inactiveTenantId, Name = "Cliente Inactivo", RazonSocial = "Inactivo S.A.S.", NitRuc = "2", IsActive = false, IsPlatformOwner = false }
+            );
+            _dbContext.SaveChanges();
+        }
+
+        private User AddUser(Guid tenantId, Guid roleId, string email)
+        {
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                RoleId = roleId,
+                Email = email,
+                FullName = "Usuario " + email,
+                PasswordHash = "x",
+                SupabaseAuthId = "auth-" + Guid.NewGuid().ToString("N")
+            };
+            _dbContext.Users.Add(user);
+            _dbContext.SaveChanges();
+            return user;
         }
 
         public void Dispose()
@@ -356,6 +387,68 @@ namespace BackendAPI.Tests
 
             await Assert.ThrowsAsync<ArgumentException>(() =>
                 _authService.LoginWithPasswordDetailsAsync(email, "correct"));
+        }
+
+        [Fact]
+        public async Task SwitchTenantContextAsync_AsPlatformOwnerAdmin_ToActiveClientTenant_Succeeds()
+        {
+            var actor = AddUser(_platformTenantId, RoleKeys.AdminId, "admin@ssterra.com");
+            _mockCurrentUser.Setup(c => c.IsSuperAdmin).Returns(false);
+            _mockCurrentUser.Setup(c => c.IsAdmin).Returns(true);
+            _mockCurrentUser.Setup(c => c.IsPlatformOwnerTenant).Returns(true);
+            _mockCurrentUser.Setup(c => c.UserId).Returns(actor.Id);
+            _mockTokenService
+                .Setup(t => t.GenerateTenantContextToken(It.Is<User>(u => u.Id == actor.Id), It.Is<Tenant>(t => t.Id == _clientTenantId)))
+                .Returns("token-for-client-tenant");
+
+            var result = await _authService.SwitchTenantContextAsync(_clientTenantId);
+
+            Assert.Equal("token-for-client-tenant", result);
+        }
+
+        [Fact]
+        public async Task SwitchTenantContextAsync_AsClientTenantAdmin_ReturnsNull()
+        {
+            var actor = AddUser(_clientTenantId, RoleKeys.AdminId, "admin@cliente.com");
+            _mockCurrentUser.Setup(c => c.IsSuperAdmin).Returns(false);
+            _mockCurrentUser.Setup(c => c.IsAdmin).Returns(true);
+            _mockCurrentUser.Setup(c => c.IsPlatformOwnerTenant).Returns(false);
+            _mockCurrentUser.Setup(c => c.UserId).Returns(actor.Id);
+
+            var result = await _authService.SwitchTenantContextAsync(_platformTenantId);
+
+            Assert.Null(result);
+            _mockTokenService.Verify(t => t.GenerateTenantContextToken(It.IsAny<User>(), It.IsAny<Tenant>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task SwitchTenantContextAsync_ToInactiveTenant_ReturnsNull()
+        {
+            var actor = AddUser(_platformTenantId, RoleKeys.AdminId, "admin2@ssterra.com");
+            _mockCurrentUser.Setup(c => c.IsSuperAdmin).Returns(false);
+            _mockCurrentUser.Setup(c => c.IsAdmin).Returns(true);
+            _mockCurrentUser.Setup(c => c.IsPlatformOwnerTenant).Returns(true);
+            _mockCurrentUser.Setup(c => c.UserId).Returns(actor.Id);
+
+            var result = await _authService.SwitchTenantContextAsync(_inactiveTenantId);
+
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task SwitchTenantContextAsync_AsSuperAdmin_ToAnyActiveTenant_Succeeds()
+        {
+            var actor = AddUser(_platformTenantId, RoleKeys.SuperAdminId, "super@ssterra.com");
+            _mockCurrentUser.Setup(c => c.IsSuperAdmin).Returns(true);
+            _mockCurrentUser.Setup(c => c.IsAdmin).Returns(false);
+            _mockCurrentUser.Setup(c => c.UserId).Returns(actor.Id);
+            _mockTokenService
+                .Setup(t => t.GenerateTenantContextToken(It.IsAny<User>(), It.IsAny<Tenant>()))
+                .Returns("token-super");
+
+            var result = await _authService.SwitchTenantContextAsync(_clientTenantId);
+
+            Assert.Equal("token-super", result);
         }
     }
 }

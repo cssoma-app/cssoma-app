@@ -4,13 +4,14 @@ import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { useNotification } from "@/context/NotificationContext"
 import { getErrorMessage } from "@/lib/utils"
-import { Building, Plus, Calendar, Users, FileText, Lock, PlusCircle, MapPin, Phone, Mail, Edit, Trash2, Power, Send, LayoutGrid, LayoutDashboard } from "lucide-react"
+import { Building, Plus, Calendar, Users, FileText, Lock, PlusCircle, MapPin, Phone, Mail, Edit, Trash2, Power, Send, LayoutGrid, LayoutDashboard, ShieldCheck } from "lucide-react"
 
 interface Tenant {
   id: string
   name: string
   razonSocial: string
   nitRuc: string
+  digitoVerificacion: string
   direccion: string
   telefono: string
   isActive: boolean
@@ -22,7 +23,19 @@ interface Tenant {
   documentsCount: number
   serviceIds: number[]
   dashboardCardIds: number[]
+  ciiu: string
+  numeroTrabajadores: number
+  centrosTrabajo: number
+  claseRiesgo: string
+  arl: string
+  responsableSst: string
+  tieneCopasst: boolean
+  tieneComiteConvivencia: boolean
+  tieneBrigada: boolean
+  tieneContratistas: boolean
 }
+
+const CLASE_RIESGO_OPTIONS = ["I", "II", "III", "IV", "V"]
 
 interface ServiceOption {
   id: number
@@ -55,21 +68,43 @@ export default function TenantsPage() {
   const [name, setName] = useState("")
   const [razonSocial, setRazonSocial] = useState("")
   const [nitRuc, setNitRuc] = useState("")
+  const [digitoVerificacion, setDigitoVerificacion] = useState("")
   const [direccion, setDireccion] = useState("")
   const [telefono, setTelefono] = useState("")
   const [adminEmail, setAdminEmail] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [serviceIds, setServiceIds] = useState<number[]>([])
   const [dashboardCardIds, setDashboardCardIds] = useState<number[]>([])
+  const [ciiu, setCiiu] = useState("")
+  const [numeroTrabajadores, setNumeroTrabajadores] = useState("")
+  const [centrosTrabajo, setCentrosTrabajo] = useState("")
+  const [claseRiesgo, setClaseRiesgo] = useState("")
+  const [arl, setArl] = useState("")
+  const [responsableSst, setResponsableSst] = useState("")
+  const [tieneCopasst, setTieneCopasst] = useState(false)
+  const [tieneComiteConvivencia, setTieneComiteConvivencia] = useState(false)
+  const [tieneBrigada, setTieneBrigada] = useState(false)
+  const [tieneContratistas, setTieneContratistas] = useState(false)
 
   // Estados Formulario de Edición
   const [editName, setEditName] = useState("")
   const [editRazonSocial, setEditRazonSocial] = useState("")
   const [editNitRuc, setEditNitRuc] = useState("")
+  const [editDigitoVerificacion, setEditDigitoVerificacion] = useState("")
   const [editDireccion, setEditDireccion] = useState("")
   const [editTelefono, setEditTelefono] = useState("")
   const [editServiceIds, setEditServiceIds] = useState<number[]>([])
   const [editDashboardCardIds, setEditDashboardCardIds] = useState<number[]>([])
+  const [editCiiu, setEditCiiu] = useState("")
+  const [editNumeroTrabajadores, setEditNumeroTrabajadores] = useState("")
+  const [editCentrosTrabajo, setEditCentrosTrabajo] = useState("")
+  const [editClaseRiesgo, setEditClaseRiesgo] = useState("")
+  const [editArl, setEditArl] = useState("")
+  const [editResponsableSst, setEditResponsableSst] = useState("")
+  const [editTieneCopasst, setEditTieneCopasst] = useState(false)
+  const [editTieneComiteConvivencia, setEditTieneComiteConvivencia] = useState(false)
+  const [editTieneBrigada, setEditTieneBrigada] = useState(false)
+  const [editTieneContratistas, setEditTieneContratistas] = useState(false)
 
   const [allServices, setAllServices] = useState<ServiceOption[]>([])
   const [allDashboardCards, setAllDashboardCards] = useState<DashboardCardOption[]>([])
@@ -174,11 +209,22 @@ export default function TenantsPage() {
           name,
           razonSocial,
           nitRuc,
+          digitoVerificacion,
           direccion,
           telefono,
           adminEmail,
           serviceIds,
-          dashboardCardIds
+          dashboardCardIds,
+          ciiu,
+          numeroTrabajadores: numeroTrabajadores ? parseInt(numeroTrabajadores, 10) : 0,
+          centrosTrabajo: centrosTrabajo ? parseInt(centrosTrabajo, 10) : 0,
+          claseRiesgo,
+          arl,
+          responsableSst,
+          tieneCopasst,
+          tieneComiteConvivencia,
+          tieneBrigada,
+          tieneContratistas
         })
       })
 
@@ -193,11 +239,22 @@ export default function TenantsPage() {
       setName("")
       setRazonSocial("")
       setNitRuc("")
+      setDigitoVerificacion("")
       setDireccion("")
       setTelefono("")
       setAdminEmail("")
       setServiceIds(allServices.map((s) => s.id))
       setDashboardCardIds(allDashboardCards.map((c) => c.id))
+      setCiiu("")
+      setNumeroTrabajadores("")
+      setCentrosTrabajo("")
+      setClaseRiesgo("")
+      setArl("")
+      setResponsableSst("")
+      setTieneCopasst(false)
+      setTieneComiteConvivencia(false)
+      setTieneBrigada(false)
+      setTieneContratistas(false)
       setIsCreateModalOpen(false)
       fetchTenants()
     } catch (err) {
@@ -212,10 +269,21 @@ export default function TenantsPage() {
     setEditName(tenant.name)
     setEditRazonSocial(tenant.razonSocial)
     setEditNitRuc(tenant.nitRuc)
+    setEditDigitoVerificacion(tenant.digitoVerificacion || "")
     setEditDireccion(tenant.direccion || "")
     setEditTelefono(tenant.telefono || "")
     setEditServiceIds(tenant.serviceIds || [])
     setEditDashboardCardIds(tenant.dashboardCardIds || [])
+    setEditCiiu(tenant.ciiu || "")
+    setEditNumeroTrabajadores(tenant.numeroTrabajadores ? String(tenant.numeroTrabajadores) : "")
+    setEditCentrosTrabajo(tenant.centrosTrabajo ? String(tenant.centrosTrabajo) : "")
+    setEditClaseRiesgo(tenant.claseRiesgo || "")
+    setEditArl(tenant.arl || "")
+    setEditResponsableSst(tenant.responsableSst || "")
+    setEditTieneCopasst(tenant.tieneCopasst || false)
+    setEditTieneComiteConvivencia(tenant.tieneComiteConvivencia || false)
+    setEditTieneBrigada(tenant.tieneBrigada || false)
+    setEditTieneContratistas(tenant.tieneContratistas || false)
     setIsEditModalOpen(true)
   }
 
@@ -238,10 +306,21 @@ export default function TenantsPage() {
           name: editName,
           razonSocial: editRazonSocial,
           nitRuc: editNitRuc,
+          digitoVerificacion: editDigitoVerificacion,
           direccion: editDireccion,
           telefono: editTelefono,
           serviceIds: editServiceIds,
-          dashboardCardIds: editDashboardCardIds
+          dashboardCardIds: editDashboardCardIds,
+          ciiu: editCiiu,
+          numeroTrabajadores: editNumeroTrabajadores ? parseInt(editNumeroTrabajadores, 10) : 0,
+          centrosTrabajo: editCentrosTrabajo ? parseInt(editCentrosTrabajo, 10) : 0,
+          claseRiesgo: editClaseRiesgo,
+          arl: editArl,
+          responsableSst: editResponsableSst,
+          tieneCopasst: editTieneCopasst,
+          tieneComiteConvivencia: editTieneComiteConvivencia,
+          tieneBrigada: editTieneBrigada,
+          tieneContratistas: editTieneContratistas
         })
       })
 
@@ -419,7 +498,7 @@ export default function TenantsPage() {
                 <thead>
                   <tr className="border-b border-border/50 bg-muted/20 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     <th className="px-6 py-4">Empresa</th>
-                    <th className="px-6 py-4">NIT / RUC</th>
+                    <th className="px-6 py-4">NIT</th>
                     <th className="px-6 py-4">Contacto</th>
                     <th className="px-6 py-4 text-center">Estado</th>
                     <th className="px-6 py-4 text-center">Acciones</th>
@@ -463,7 +542,7 @@ export default function TenantsPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 text-muted-foreground font-medium">
-                            {tenant.nitRuc || "Sin NIT/RUC"}
+                            {tenant.nitRuc ? `${tenant.nitRuc}${tenant.digitoVerificacion ? "-" + tenant.digitoVerificacion : ""}` : "Sin NIT"}
                           </td>
                           <td className="px-6 py-4 text-muted-foreground text-xs">
                             {tenant.telefono && <p className="flex items-center gap-1"><Phone size={12} /> {tenant.telefono}</p>}
@@ -604,15 +683,27 @@ export default function TenantsPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">NIT / RUC</label>
-                    <input
-                      type="text"
-                      required
-                      value={nitRuc}
-                      onChange={(e) => setNitRuc(e.target.value)}
-                      placeholder="Identificador fiscal"
-                      className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
-                    />
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">NIT</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        required
+                        value={nitRuc}
+                        onChange={(e) => setNitRuc(e.target.value)}
+                        placeholder="900985000"
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                      <span className="text-muted-foreground select-none">-</span>
+                      <input
+                        type="text"
+                        maxLength={1}
+                        value={digitoVerificacion}
+                        onChange={(e) => setDigitoVerificacion(e.target.value.replace(/\D/g, "").slice(0, 1))}
+                        placeholder="DV"
+                        aria-label="Dígito de verificación"
+                        className="block w-14 shrink-0 px-3 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm text-center"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">
@@ -636,6 +727,95 @@ export default function TenantsPage() {
                     placeholder="Calle, Ciudad, País"
                     className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
                   />
+                </div>
+
+                <div className="border-t border-border/50 pt-4 space-y-4">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <ShieldCheck size={16} className="text-primary" />
+                    Perfil SST
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">CIIU</label>
+                      <input
+                        type="text"
+                        value={ciiu}
+                        onChange={(e) => setCiiu(e.target.value)}
+                        placeholder="Ej. 1071"
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Clase de Riesgo</label>
+                      <select
+                        value={claseRiesgo}
+                        onChange={(e) => setClaseRiesgo(e.target.value)}
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      >
+                        <option value="">Selecciona una clase</option>
+                        {CLASE_RIESGO_OPTIONS.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Número de Trabajadores</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={numeroTrabajadores}
+                        onChange={(e) => setNumeroTrabajadores(e.target.value)}
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Centros de Trabajo</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={centrosTrabajo}
+                        onChange={(e) => setCentrosTrabajo(e.target.value)}
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">ARL</label>
+                      <input
+                        type="text"
+                        value={arl}
+                        onChange={(e) => setArl(e.target.value)}
+                        placeholder="Ej. Sura, Colmena, Positiva..."
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Responsable SST</label>
+                      <input
+                        type="text"
+                        value={responsableSst}
+                        onChange={(e) => setResponsableSst(e.target.value)}
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                      <input type="checkbox" checked={tieneCopasst} onChange={(e) => setTieneCopasst(e.target.checked)} className="rounded border-border" />
+                      COPASST
+                    </label>
+                    <label className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                      <input type="checkbox" checked={tieneComiteConvivencia} onChange={(e) => setTieneComiteConvivencia(e.target.checked)} className="rounded border-border" />
+                      Comité de Convivencia
+                    </label>
+                    <label className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                      <input type="checkbox" checked={tieneBrigada} onChange={(e) => setTieneBrigada(e.target.checked)} className="rounded border-border" />
+                      Brigada
+                    </label>
+                    <label className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                      <input type="checkbox" checked={tieneContratistas} onChange={(e) => setTieneContratistas(e.target.checked)} className="rounded border-border" />
+                      Contratistas
+                    </label>
+                  </div>
                 </div>
 
                 <div className="border-t border-border/50 pt-4 space-y-4">
@@ -758,15 +938,27 @@ export default function TenantsPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">NIT / RUC</label>
-                    <input
-                      type="text"
-                      required
-                      value={editNitRuc}
-                      onChange={(e) => setEditNitRuc(e.target.value)}
-                      placeholder="Identificador fiscal"
-                      className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
-                    />
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">NIT</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        required
+                        value={editNitRuc}
+                        onChange={(e) => setEditNitRuc(e.target.value)}
+                        placeholder="900985000"
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                      <span className="text-muted-foreground select-none">-</span>
+                      <input
+                        type="text"
+                        maxLength={1}
+                        value={editDigitoVerificacion}
+                        onChange={(e) => setEditDigitoVerificacion(e.target.value.replace(/\D/g, "").slice(0, 1))}
+                        placeholder="DV"
+                        aria-label="Dígito de verificación"
+                        className="block w-14 shrink-0 px-3 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm text-center"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">
@@ -790,6 +982,95 @@ export default function TenantsPage() {
                     placeholder="Calle, Ciudad, País"
                     className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
                   />
+                </div>
+
+                <div className="border-t border-border/50 pt-4 space-y-4">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <ShieldCheck size={16} className="text-primary" />
+                    Perfil SST
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">CIIU</label>
+                      <input
+                        type="text"
+                        value={editCiiu}
+                        onChange={(e) => setEditCiiu(e.target.value)}
+                        placeholder="Ej. 1071"
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Clase de Riesgo</label>
+                      <select
+                        value={editClaseRiesgo}
+                        onChange={(e) => setEditClaseRiesgo(e.target.value)}
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      >
+                        <option value="">Selecciona una clase</option>
+                        {CLASE_RIESGO_OPTIONS.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Número de Trabajadores</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={editNumeroTrabajadores}
+                        onChange={(e) => setEditNumeroTrabajadores(e.target.value)}
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Centros de Trabajo</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={editCentrosTrabajo}
+                        onChange={(e) => setEditCentrosTrabajo(e.target.value)}
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">ARL</label>
+                      <input
+                        type="text"
+                        value={editArl}
+                        onChange={(e) => setEditArl(e.target.value)}
+                        placeholder="Ej. Sura, Colmena, Positiva..."
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Responsable SST</label>
+                      <input
+                        type="text"
+                        value={editResponsableSst}
+                        onChange={(e) => setEditResponsableSst(e.target.value)}
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                      <input type="checkbox" checked={editTieneCopasst} onChange={(e) => setEditTieneCopasst(e.target.checked)} className="rounded border-border" />
+                      COPASST
+                    </label>
+                    <label className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                      <input type="checkbox" checked={editTieneComiteConvivencia} onChange={(e) => setEditTieneComiteConvivencia(e.target.checked)} className="rounded border-border" />
+                      Comité de Convivencia
+                    </label>
+                    <label className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                      <input type="checkbox" checked={editTieneBrigada} onChange={(e) => setEditTieneBrigada(e.target.checked)} className="rounded border-border" />
+                      Brigada
+                    </label>
+                    <label className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                      <input type="checkbox" checked={editTieneContratistas} onChange={(e) => setEditTieneContratistas(e.target.checked)} className="rounded border-border" />
+                      Contratistas
+                    </label>
+                  </div>
                 </div>
 
                 <div className="border-t border-border/50 pt-4 space-y-3">

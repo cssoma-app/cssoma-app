@@ -20,19 +20,22 @@ namespace BackendAPI.Services
         private readonly IEmailService _emailService;
         private readonly ITokenService _tokenService;
         private readonly IPasswordHasher<User> _passwordHasher;
+        private readonly ICurrentUserService _currentUserService;
 
         public AuthService(
             ApplicationDbContext dbContext,
             IOTPService otpService,
             IEmailService emailService,
             ITokenService tokenService,
-            IPasswordHasher<User> passwordHasher)
+            IPasswordHasher<User> passwordHasher,
+            ICurrentUserService currentUserService)
         {
             _dbContext = dbContext;
             _otpService = otpService;
             _emailService = emailService;
             _tokenService = tokenService;
             _passwordHasher = passwordHasher;
+            _currentUserService = currentUserService;
         }
 
         public async Task<bool> RequestCodeAsync(string email)
@@ -281,6 +284,32 @@ namespace BackendAPI.Services
             if (user == null) return null;
 
             return _tokenService.GenerateToken(user);
+        }
+
+        // Selector de empresa (cambio de contexto de tenant): mismo criterio de acceso amplio que
+        // TenantService.CanManageTenants(). El actor y su rol no cambian — solo el TenantId activo.
+        public async Task<string?> SwitchTenantContextAsync(Guid targetTenantId)
+        {
+            var hasBroadAccess = _currentUserService.IsSuperAdmin ||
+                                  (_currentUserService.IsAdmin && _currentUserService.IsPlatformOwnerTenant);
+
+            if (!hasBroadAccess || !_currentUserService.UserId.HasValue)
+                return null;
+
+            var targetTenant = await _dbContext.Tenants.FindAsync(targetTenantId);
+            if (targetTenant == null || !targetTenant.IsActive)
+                return null;
+
+            var actor = await _dbContext.Users
+                .IgnoreQueryFilters()
+                .Include(u => u.Role)
+                .Include(u => u.Tenant)
+                .FirstOrDefaultAsync(u => u.Id == _currentUserService.UserId.Value);
+
+            if (actor == null)
+                return null;
+
+            return _tokenService.GenerateTenantContextToken(actor, targetTenant);
         }
     }
 }

@@ -7,6 +7,7 @@ namespace BackendAPI.Contracts
         public string Name { get; set; } = string.Empty;
         public string RazonSocial { get; set; } = string.Empty;
         public string NitRuc { get; set; } = string.Empty;
+        public string DigitoVerificacion { get; set; } = string.Empty;
         public string Direccion { get; set; } = string.Empty;
         public string Telefono { get; set; } = string.Empty;
         public string AdminEmail { get; set; } = string.Empty;
@@ -14,6 +15,16 @@ namespace BackendAPI.Contracts
         public List<int>? ServiceIds { get; set; }
         // Sin especificar (null o vacío), la empresa arranca con todas las tarjetas habilitadas.
         public List<int>? DashboardCardIds { get; set; }
+        public string Ciiu { get; set; } = string.Empty;
+        public int NumeroTrabajadores { get; set; }
+        public int CentrosTrabajo { get; set; }
+        public string ClaseRiesgo { get; set; } = string.Empty;
+        public string Arl { get; set; } = string.Empty;
+        public string ResponsableSst { get; set; } = string.Empty;
+        public bool TieneCopasst { get; set; }
+        public bool TieneComiteConvivencia { get; set; }
+        public bool TieneBrigada { get; set; }
+        public bool TieneContratistas { get; set; }
     }
 
     public class UpdateTenantRequest
@@ -21,11 +32,22 @@ namespace BackendAPI.Contracts
         public string Name { get; set; } = string.Empty;
         public string RazonSocial { get; set; } = string.Empty;
         public string NitRuc { get; set; } = string.Empty;
+        public string DigitoVerificacion { get; set; } = string.Empty;
         public string Direccion { get; set; } = string.Empty;
         public string Telefono { get; set; } = string.Empty;
         // Null = no tocar la selección de servicios actual. Lista (incluso vacía) = reemplazarla.
         public List<int>? ServiceIds { get; set; }
         // Null = no tocar la selección de tarjetas actual. Lista (incluso vacía) = reemplazarla.
         public List<int>? DashboardCardIds { get; set; }
+        public string Ciiu { get; set; } = string.Empty;
+        public int NumeroTrabajadores { get; set; }
+        public int CentrosTrabajo { get; set; }
+        public string ClaseRiesgo { get; set; } = string.Empty;
+        public string Arl { get; set; } = string.Empty;
+        public string ResponsableSst { get; set; } = string.Empty;
+        public bool TieneCopasst { get; set; }
+        public bool TieneComiteConvivencia { get; set; }
+        public bool TieneBrigada { get; set; }
+        public bool TieneContratistas { get; set; }
     }
 }

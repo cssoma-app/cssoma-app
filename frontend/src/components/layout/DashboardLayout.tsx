@@ -19,7 +19,9 @@ interface AlertItem {
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
-  const [user, setUser] = useState<{ name: string; email: string; role: string; isPlatformOwner: boolean; tenantName: string } | null>(null)
+  const [user, setUser] = useState<{ name: string; email: string; role: string; isPlatformOwner: boolean; tenantName: string; tenantId: string } | null>(null)
+  const [tenantOptions, setTenantOptions] = useState<{ id: string; name: string }[]>([])
+  const [isSwitchingTenant, setIsSwitchingTenant] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [myServices, setMyServices] = useState<{ all: boolean; keys: string[] } | null>(null)
   const [isNavigating, setIsNavigating] = useState(false)
@@ -133,8 +135,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         const role = payloadDecoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || payloadDecoded.role || "Client";
         const isPlatformOwner = payloadDecoded.IsPlatformOwner === "true";
         const tenantName = payloadDecoded.TenantName || "";
+        const tenantId = payloadDecoded.TenantId || "";
 
-        setUser({ name, email, role, isPlatformOwner, tenantName });
+        setUser({ name, email, role, isPlatformOwner, tenantName, tenantId });
       } catch (e) {
         console.error("Error decoding token", e);
       }
@@ -153,6 +156,54 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Selector de empresa: solo quien tiene acceso amplio puede ver/usar el listado completo
+  // de empresas (mismo criterio que /dashboard/tenants — GET /api/tenants ya lo exige en backend).
+  useEffect(() => {
+    if (!hasBroadAccess) return;
+    const token = getCookie("token");
+    if (!token) return;
+
+    fetch(`${apiBaseUrl}/api/tenants`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        const options = (data as { id: string; name: string; isActive: boolean }[])
+          .filter((t) => t.isActive)
+          .map((t) => ({ id: t.id, name: t.name }));
+        setTenantOptions(options);
+      })
+      .catch((e) => console.error("Error loading tenants for switcher", e));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasBroadAccess]);
+
+  const handleSwitchTenant = async (tenantId: string) => {
+    if (!tenantId || tenantId === user?.tenantId) return;
+    setIsSwitchingTenant(true);
+    const token = getCookie("token");
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/auth/switch-tenant/${tenantId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }
+      });
+      if (!response.ok) {
+        setIsSwitchingTenant(false);
+        return;
+      }
+      const data = await response.json();
+      // Mismo formato de cookie que usa el login (frontend/src/app/login/page.tsx).
+      document.cookie = `token=${data.token}; path=/; max-age=604800; SameSite=Lax`;
+      // Recarga completa a propósito: cada página pide sus propios datos al montar, sin cache
+      // global — es la forma más simple y confiable de garantizar que no quede ni un dato de
+      // la empresa anterior en memoria al cambiar de contexto.
+      window.location.href = "/dashboard";
+    } catch (e) {
+      console.error("Error switching tenant", e);
+      setIsSwitchingTenant(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.clear()
@@ -293,7 +344,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <div className="flex flex-col gap-1 mt-1 pl-4 border-l border-border/50 ml-4">
                   <Link href="/dashboard/sgsst-diseno" onClick={() => handleNavClick("/dashboard/sgsst-diseno")} className={getLinkClass("/dashboard/sgsst-diseno")}>
                     <ClipboardList size={16} />
-                    Diseño e implementación SG-SST (PYME Riesgo 1-3)
+                    Diseño e implementación SG-SST PYME
                   </Link>
                 </div>
               )}
@@ -355,11 +406,29 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <div className="w-full flex-1" />
 
           <div className="flex items-center gap-4">
-            {user?.tenantName && (
+            {hasBroadAccess && user?.tenantId ? (
               <div className="hidden sm:flex items-center gap-2 rounded-full border border-border/50 bg-muted/40 px-3 py-1.5 text-sm font-medium text-foreground">
                 <Building size={14} className="text-primary shrink-0" />
-                <span className="max-w-[160px] truncate">{user.tenantName}</span>
+                <select
+                  value={user.tenantId}
+                  onChange={(e) => handleSwitchTenant(e.target.value)}
+                  disabled={isSwitchingTenant || tenantOptions.length === 0}
+                  aria-label="Empresa activa"
+                  className="max-w-[180px] bg-transparent outline-none cursor-pointer disabled:opacity-60 disabled:cursor-wait"
+                >
+                  {tenantOptions.length === 0 && <option value={user.tenantId}>{user.tenantName}</option>}
+                  {tenantOptions.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
               </div>
+            ) : (
+              user?.tenantName && (
+                <div className="hidden sm:flex items-center gap-2 rounded-full border border-border/50 bg-muted/40 px-3 py-1.5 text-sm font-medium text-foreground">
+                  <Building size={14} className="text-primary shrink-0" />
+                  <span className="max-w-[160px] truncate">{user.tenantName}</span>
+                </div>
+              )
             )}
             {/* Campana de Alertas */}
             <div className="relative">

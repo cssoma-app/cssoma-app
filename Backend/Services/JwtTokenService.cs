@@ -20,10 +20,23 @@ namespace BackendAPI.Services
 
         public string GenerateToken(User user)
         {
+            return BuildToken(user, effectiveTenantId: user.TenantId, effectiveTenantName: user.Tenant?.Name ?? string.Empty);
+        }
+
+        // El claim IsPlatformOwner siempre se calcula de actor.Tenant (la empresa REAL del usuario,
+        // sin importar cuál esté activa) — así el selector de empresa nunca le hace perder el acceso
+        // amplio a un Admin de la empresa propietaria al cambiar de contexto (ver DashboardLayout).
+        public string GenerateTenantContextToken(User actor, Tenant activeTenant)
+        {
+            return BuildToken(actor, effectiveTenantId: activeTenant.Id, effectiveTenantName: activeTenant.Name);
+        }
+
+        private string BuildToken(User user, Guid? effectiveTenantId, string effectiveTenantName)
+        {
             var secretKey = _configuration["Jwt:Secret"] ?? "superSecretKeyCSOMA2026SSTerraSaaSPlatform";
             var issuer = _configuration["Jwt:Issuer"] ?? "SSTerraAPI";
             var audience = _configuration["Jwt:Audience"] ?? "SSTerraApp";
-            
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
@@ -33,8 +46,8 @@ namespace BackendAPI.Services
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role?.Key ?? string.Empty),
                 new Claim("FullName", user.FullName ?? string.Empty),
-                new Claim("TenantId", user.TenantId?.ToString() ?? string.Empty),
-                new Claim("TenantName", user.Tenant?.Name ?? string.Empty),
+                new Claim("TenantId", effectiveTenantId?.ToString() ?? string.Empty),
+                new Claim("TenantName", effectiveTenantName),
                 new Claim("IsPlatformOwner", (user.Tenant?.IsPlatformOwner ?? false) ? "true" : "false")
             };
 

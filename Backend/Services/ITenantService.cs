@@ -20,6 +20,7 @@ namespace BackendAPI.Services
         public string Name { get; set; } = string.Empty;
         public string RazonSocial { get; set; } = string.Empty;
         public string NitRuc { get; set; } = string.Empty;
+        public string DigitoVerificacion { get; set; } = string.Empty;
         public string Direccion { get; set; } = string.Empty;
         public string Telefono { get; set; } = string.Empty;
         public bool IsActive { get; set; }
@@ -31,6 +32,16 @@ namespace BackendAPI.Services
         public bool IsAdminTemporary { get; set; }
         public List<int> ServiceIds { get; set; } = new();
         public List<int> DashboardCardIds { get; set; } = new();
+        public string Ciiu { get; set; } = string.Empty;
+        public int NumeroTrabajadores { get; set; }
+        public int CentrosTrabajo { get; set; }
+        public string ClaseRiesgo { get; set; } = string.Empty;
+        public string Arl { get; set; } = string.Empty;
+        public string ResponsableSst { get; set; } = string.Empty;
+        public bool TieneCopasst { get; set; }
+        public bool TieneComiteConvivencia { get; set; }
+        public bool TieneBrigada { get; set; }
+        public bool TieneContratistas { get; set; }
     }
 
     public class CreateTenantInput
@@ -38,11 +49,22 @@ namespace BackendAPI.Services
         public string Name { get; set; } = string.Empty;
         public string RazonSocial { get; set; } = string.Empty;
         public string NitRuc { get; set; } = string.Empty;
+        public string DigitoVerificacion { get; set; } = string.Empty;
         public string Direccion { get; set; } = string.Empty;
         public string Telefono { get; set; } = string.Empty;
         public string AdminEmail { get; set; } = string.Empty;
         public List<int>? ServiceIds { get; set; }
         public List<int>? DashboardCardIds { get; set; }
+        public string Ciiu { get; set; } = string.Empty;
+        public int NumeroTrabajadores { get; set; }
+        public int CentrosTrabajo { get; set; }
+        public string ClaseRiesgo { get; set; } = string.Empty;
+        public string Arl { get; set; } = string.Empty;
+        public string ResponsableSst { get; set; } = string.Empty;
+        public bool TieneCopasst { get; set; }
+        public bool TieneComiteConvivencia { get; set; }
+        public bool TieneBrigada { get; set; }
+        public bool TieneContratistas { get; set; }
     }
 
     public class UpdateTenantInput
@@ -50,9 +72,20 @@ namespace BackendAPI.Services
         public string Name { get; set; } = string.Empty;
         public string RazonSocial { get; set; } = string.Empty;
         public string NitRuc { get; set; } = string.Empty;
+        public string DigitoVerificacion { get; set; } = string.Empty;
         public string Direccion { get; set; } = string.Empty;
         public string Telefono { get; set; } = string.Empty;
         public List<int>? ServiceIds { get; set; }
         public List<int>? DashboardCardIds { get; set; }
+        public string Ciiu { get; set; } = string.Empty;
+        public int NumeroTrabajadores { get; set; }
+        public int CentrosTrabajo { get; set; }
+        public string ClaseRiesgo { get; set; } = string.Empty;
+        public string Arl { get; set; } = string.Empty;
+        public string ResponsableSst { get; set; } = string.Empty;
+        public bool TieneCopasst { get; set; }
+        public bool TieneComiteConvivencia { get; set; }
+        public bool TieneBrigada { get; set; }
+        public bool TieneContratistas { get; set; }
     }
 }

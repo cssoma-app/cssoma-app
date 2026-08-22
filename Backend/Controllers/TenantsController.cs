@@ -37,11 +37,22 @@ namespace BackendAPI.Controllers
                 Name = request?.Name ?? string.Empty,
                 RazonSocial = request?.RazonSocial ?? string.Empty,
                 NitRuc = request?.NitRuc ?? string.Empty,
+                DigitoVerificacion = request?.DigitoVerificacion ?? string.Empty,
                 Direccion = request?.Direccion ?? string.Empty,
                 Telefono = request?.Telefono ?? string.Empty,
                 AdminEmail = request?.AdminEmail ?? string.Empty,
                 ServiceIds = request?.ServiceIds,
-                DashboardCardIds = request?.DashboardCardIds
+                DashboardCardIds = request?.DashboardCardIds,
+                Ciiu = request?.Ciiu ?? string.Empty,
+                NumeroTrabajadores = request?.NumeroTrabajadores ?? 0,
+                CentrosTrabajo = request?.CentrosTrabajo ?? 0,
+                ClaseRiesgo = request?.ClaseRiesgo ?? string.Empty,
+                Arl = request?.Arl ?? string.Empty,
+                ResponsableSst = request?.ResponsableSst ?? string.Empty,
+                TieneCopasst = request?.TieneCopasst ?? false,
+                TieneComiteConvivencia = request?.TieneComiteConvivencia ?? false,
+                TieneBrigada = request?.TieneBrigada ?? false,
+                TieneContratistas = request?.TieneContratistas ?? false
             });
             return this.ToActionResult(result);
         }
@@ -54,10 +65,21 @@ namespace BackendAPI.Controllers
                 Name = request?.Name ?? string.Empty,
                 RazonSocial = request?.RazonSocial ?? string.Empty,
                 NitRuc = request?.NitRuc ?? string.Empty,
+                DigitoVerificacion = request?.DigitoVerificacion ?? string.Empty,
                 Direccion = request?.Direccion ?? string.Empty,
                 Telefono = request?.Telefono ?? string.Empty,
                 ServiceIds = request?.ServiceIds,
-                DashboardCardIds = request?.DashboardCardIds
+                DashboardCardIds = request?.DashboardCardIds,
+                Ciiu = request?.Ciiu ?? string.Empty,
+                NumeroTrabajadores = request?.NumeroTrabajadores ?? 0,
+                CentrosTrabajo = request?.CentrosTrabajo ?? 0,
+                ClaseRiesgo = request?.ClaseRiesgo ?? string.Empty,
+                Arl = request?.Arl ?? string.Empty,
+                ResponsableSst = request?.ResponsableSst ?? string.Empty,
+                TieneCopasst = request?.TieneCopasst ?? false,
+                TieneComiteConvivencia = request?.TieneComiteConvivencia ?? false,
+                TieneBrigada = request?.TieneBrigada ?? false,
+                TieneContratistas = request?.TieneContratistas ?? false
             });
             return this.ToActionResult(result);
         }

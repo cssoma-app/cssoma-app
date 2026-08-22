@@ -10,7 +10,8 @@ import {
   ScrollText, ClipboardCheck, CalendarCheck, Archive, Presentation, MessageSquare, ShoppingCart, Building2,
   BookOpen, ListOrdered, HeartPulse, Siren, AlertOctagon, Briefcase,
   FileText, HardHat, Stethoscope, Lock, Leaf, Droplet, Wrench, Settings, Activity, Megaphone,
-  BarChart3, Eye, Scale, TrendingUp,
+  BarChart3, Eye, Scale, TrendingUp, Trash2,
+  FlaskConical, Brain, Armchair, Box,
 } from "lucide-react"
 
 type PhvaTab = "planear" | "hacer" | "verificar" | "actuar" | "registros"
@@ -169,6 +170,17 @@ const CAPACITACION_ITEMS: RecursoItem[] = [
       { key: "fechaFinalizacion", label: "Fecha de Finalización", type: "date", required: true },
       { key: "soporte", label: "Certificado (50 horas)", type: "file", required: true },
       OBSERVACIONES_FIELD,
+    ],
+  },
+  {
+    label: "Certificados del curso de 50 horas (o actualización de 20 horas)",
+    icon: Monitor,
+    fields: [
+      { key: "trabajador", label: "Nombre del Trabajador", type: "text", required: true },
+      { key: "tipoCurso", label: "Tipo de Curso", type: "select", required: true, options: ["50 horas (inicial)", "20 horas (actualización)"] },
+      { key: "entidad", label: "Entidad Certificadora", type: "text" },
+      { key: "fechaFinalizacion", label: "Fecha de Finalización", type: "date", required: true },
+      { key: "soporte", label: "Certificado", type: "file", required: true },
     ],
   },
 ]
@@ -417,6 +429,59 @@ const CONDICIONES_SALUD_ITEMS: RecursoItem[] = [
       OBSERVACIONES_FIELD,
     ],
   },
+  {
+    label: "Eliminación de residuos líquidos y sólidos",
+    icon: Droplet,
+    fields: [
+      { key: "fecha", label: "Fecha de Verificación", type: "date", required: true },
+      { key: "responsable", label: "Responsable", type: "text" },
+      { key: "tipoResiduo", label: "Tipo de Residuo", type: "select", options: ["Líquidos", "Sólidos", "Ambos"] },
+      SOPORTE_FIELD,
+      OBSERVACIONES_FIELD,
+    ],
+  },
+  {
+    label: "Sistemas de vigilancia epidemiológica",
+    icon: Activity,
+    fields: [
+      { key: "sistema", label: "Sistema de Vigilancia", type: "text", required: true },
+      { key: "fechaImplementacion", label: "Fecha de Implementación", type: "date", required: true },
+      { key: "responsable", label: "Responsable", type: "text" },
+      SOPORTE_FIELD,
+      OBSERVACIONES_FIELD,
+    ],
+  },
+  {
+    label: "Diagnóstico de condiciones de salud",
+    icon: HeartPulse,
+    fields: [
+      { key: "fecha", label: "Fecha", type: "date", required: true },
+      { key: "responsable", label: "Responsable", type: "text", required: true },
+      { key: "poblacion", label: "N° de Trabajadores Evaluados", type: "number" },
+      SOPORTE_FIELD,
+      OBSERVACIONES_FIELD,
+    ],
+  },
+  {
+    label: "Prevención y control del riesgo psicosocial",
+    icon: Brain,
+    fields: [
+      { key: "medida", label: "Medida de Prevención / Control", type: "textarea", required: true },
+      { key: "responsable", label: "Responsable", type: "text" },
+      { key: "fecha", label: "Fecha", type: "date", required: true },
+      SOPORTE_FIELD,
+    ],
+  },
+  {
+    label: "Prevención y control del riesgo biomecánico / ergonómico",
+    icon: Armchair,
+    fields: [
+      { key: "medida", label: "Medida de Prevención / Control", type: "textarea", required: true },
+      { key: "puestoTrabajo", label: "Puesto de Trabajo Evaluado", type: "text" },
+      { key: "fecha", label: "Fecha", type: "date", required: true },
+      SOPORTE_FIELD,
+    ],
+  },
 ]
 
 const HACER_PELIGROS_ITEMS: RecursoItem[] = [
@@ -492,6 +557,56 @@ const HACER_PELIGROS_ITEMS: RecursoItem[] = [
       { key: "tema", label: "Tema", type: "text", required: true, placeholder: "Ej. Uso correcto de EPP" },
       { key: "fecha", label: "Fecha", type: "date", required: true },
       { key: "soporte", label: "Certificado / Soporte (opcional)", type: "file" },
+    ],
+  },
+  {
+    label: "Identificación de sustancias químicas peligrosas",
+    icon: FlaskConical,
+    fields: [
+      { key: "sustancia", label: "Sustancia Química", type: "text", required: true },
+      { key: "area", label: "Área / Proceso", type: "text" },
+      { key: "fecha", label: "Fecha", type: "date", required: true },
+      { key: "soporte", label: "Hoja de Seguridad (opcional)", type: "file" },
+    ],
+  },
+  {
+    label: "Medidas de prevención y control de riesgos biológicos",
+    icon: Stethoscope,
+    fields: [
+      { key: "riesgoBiologico", label: "Riesgo Biológico Identificado", type: "text", required: true },
+      { key: "medida", label: "Medida de Prevención / Control", type: "textarea", required: true },
+      { key: "fecha", label: "Fecha", type: "date" },
+      SOPORTE_FIELD,
+    ],
+  },
+  {
+    label: "Trabajo en alturas",
+    icon: HardHat,
+    fields: [
+      { key: "trabajador", label: "Nombre del Trabajador", type: "text", required: true },
+      { key: "certificacion", label: "Certificación / Nivel", type: "text", placeholder: "Ej. Avanzado" },
+      { key: "fechaVencimiento", label: "Fecha de Vencimiento Certificación", type: "date" },
+      { key: "soporte", label: "Certificado", type: "file", required: true },
+    ],
+  },
+  {
+    label: "Trabajo en espacios confinados",
+    icon: Box,
+    fields: [
+      { key: "trabajador", label: "Nombre del Trabajador", type: "text", required: true },
+      { key: "certificacion", label: "Certificación / Nivel", type: "text" },
+      { key: "fecha", label: "Fecha", type: "date", required: true },
+      { key: "soporte", label: "Certificado", type: "file", required: true },
+    ],
+  },
+  {
+    label: "Tareas de Alto Riesgo Crítico u Operativo",
+    icon: AlertOctagon,
+    fields: [
+      { key: "tarea", label: "Tarea de Alto Riesgo", type: "text", required: true },
+      { key: "permisoTrabajo", label: "N° de Permiso de Trabajo", type: "text" },
+      { key: "fecha", label: "Fecha", type: "date", required: true },
+      { key: "soporte", label: "Permiso de Trabajo (opcional)", type: "file" },
     ],
   },
 ]
@@ -664,6 +779,16 @@ const AUDITORIA_ITEMS: RecursoItem[] = [
       SOPORTE_FIELD,
     ],
   },
+  {
+    label: "Cronograma del programa de auditorías",
+    icon: CalendarCheck,
+    fields: [
+      { key: "anio", label: "Año", type: "text", required: true, placeholder: "Ej. 2026" },
+      { key: "fechaAprobacion", label: "Fecha de Aprobación", type: "date", required: true },
+      SOPORTE_REQUERIDO_FIELD,
+      OBSERVACIONES_FIELD,
+    ],
+  },
 ]
 
 const REVISION_DIRECCION_ITEMS: RecursoItem[] = [
@@ -703,12 +828,36 @@ const VERIFICAR_SUBTABS: SubTabGroup[] = [
 
 const MEJORAMIENTO_ITEMS: RecursoItem[] = [
   {
-    label: "Procedimiento de acciones correctivas, preventivas y de mejora",
+    label: "Acciones preventivas y correctivas",
+    icon: ClipboardCheck,
+    fields: [
+      { key: "hallazgo", label: "Hallazgo / No Conformidad", type: "text", required: true },
+      { key: "tipoAccion", label: "Tipo de Acción", type: "select", required: true, options: ["Preventiva", "Correctiva"] },
+      { key: "responsable", label: "Responsable", type: "text", required: true },
+      { key: "fechaLimite", label: "Fecha Límite", type: "date" },
+      SOPORTE_FIELD,
+      OBSERVACIONES_FIELD,
+    ],
+  },
+  {
+    label: "Acciones de mejora a partir de las recomendaciones del COPASST",
+    icon: Users,
+    fields: [
+      { key: "recomendacion", label: "Recomendación del COPASST", type: "textarea", required: true },
+      { key: "accionTomada", label: "Acción de Mejora", type: "textarea", required: true },
+      { key: "fecha", label: "Fecha", type: "date", required: true },
+      { key: "responsable", label: "Responsable", type: "text" },
+      SOPORTE_FIELD,
+    ],
+  },
+  {
+    label: "Acciones de mejora requeridas por autoridades o ARL",
     icon: ScrollText,
     fields: [
-      { key: "fechaAprobacion", label: "Fecha de Aprobación", type: "date", required: true },
-      { key: "version", label: "Versión", type: "text" },
-      SOPORTE_REQUERIDO_FIELD,
+      { key: "entidad", label: "Autoridad / ARL", type: "text", required: true },
+      { key: "requerimiento", label: "Requerimiento", type: "textarea", required: true },
+      { key: "fechaLimite", label: "Fecha Límite", type: "date", required: true },
+      { key: "soporte", label: "Soporte de Cumplimiento", type: "file", required: true },
       OBSERVACIONES_FIELD,
     ],
   },
@@ -765,13 +914,35 @@ const REGISTROS_CAPACITACION_ITEMS: RecursoItem[] = [
 
 const REGISTROS_EPP_ITEMS: RecursoItem[] = [
   {
-    label: "Registro de suministro de EPP",
+    label: "Registro de suministro y adquisición",
     icon: HardHat,
     fields: [
       { key: "trabajador", label: "Nombre del Trabajador", type: "text", required: true },
       { key: "epp", label: "Elemento de Protección Personal", type: "text", required: true },
       { key: "fecha", label: "Fecha de Entrega", type: "date", required: true },
       { key: "cantidad", label: "Cantidad", type: "number" },
+      SOPORTE_FIELD,
+    ],
+  },
+  {
+    label: "Registro de selección cuidado y/o mantenimiento",
+    icon: Wrench,
+    fields: [
+      { key: "epp", label: "Elemento de Protección Personal", type: "text", required: true },
+      { key: "actividad", label: "Actividad", type: "select", required: true, options: ["Selección", "Cuidado", "Mantenimiento"] },
+      { key: "fecha", label: "Fecha", type: "date", required: true },
+      { key: "responsable", label: "Responsable", type: "text" },
+      SOPORTE_FIELD,
+    ],
+  },
+  {
+    label: "Disposición final de EPP/EPI",
+    icon: Trash2,
+    fields: [
+      { key: "epp", label: "Elemento de Protección Personal / EPI", type: "text", required: true },
+      { key: "motivo", label: "Motivo de Disposición", type: "text", placeholder: "Ej. Desgaste, vencimiento" },
+      { key: "fecha", label: "Fecha", type: "date", required: true },
+      { key: "responsable", label: "Responsable", type: "text" },
       SOPORTE_FIELD,
     ],
   },
@@ -966,7 +1137,7 @@ export default function SgSstDisenoPage() {
       <div className="space-y-6 mt-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-foreground">Diseño e Implementación SG-SST</h2>
-          <p className="text-sm text-muted-foreground">PYME Riesgo 1-3 — ciclo PHVA (Planear, Hacer, Verificar, Actuar)</p>
+          <p className="text-sm text-muted-foreground">PYME — ciclo PHVA (Planear, Hacer, Verificar, Actuar)</p>
         </div>
 
         <div className="border-b border-border/50 flex gap-1 overflow-x-auto">

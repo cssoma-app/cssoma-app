@@ -75,7 +75,7 @@ export default function LandingPage() {
                   <h3 className="text-3xl font-bold">Seguridad y Salud (SST)</h3>
                 </div>
                 <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-3 text-sm text-muted-foreground relative z-10 font-light">
-                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Diseño e implementación SG-SST (PYME Riesgo 1-3)</span></li>
+                  <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Diseño e implementación SG-SST </span></li>
                   <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Diseño e implementación SG-SST (Empresa Riesgo 4-5)</span></li>
                   <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Auditoría interna de cumplimiento SG-SST</span></li>
                   <li className="flex items-start"><CheckCircle2 className="mr-2 h-4 w-4 mt-0.5 text-orange-500 shrink-0" /> <span>Elaboración y actualización de matriz de riesgos IPERC</span></li>

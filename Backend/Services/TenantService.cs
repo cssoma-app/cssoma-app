@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BackendAPI.Data;
+using BackendAPI.Helpers;
 using BackendAPI.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -37,6 +38,14 @@ namespace BackendAPI.Services
                    (_currentUserService.IsAdmin && _currentUserService.IsPlatformOwnerTenant);
         }
 
+        // El dígito de verificación del NIT es opcional, pero si se envía debe ser exactamente
+        // un dígito numérico (formato colombiano: XXXXXXXXX-X).
+        private static bool IsValidDigitoVerificacion(string digitoVerificacion)
+        {
+            return string.IsNullOrEmpty(digitoVerificacion) ||
+                   (digitoVerificacion.Length == 1 && char.IsDigit(digitoVerificacion[0]));
+        }
+
         public async Task<ServiceResult<List<TenantListItemDto>>> GetTenantsAsync()
         {
             if (!CanManageTenants())
@@ -53,6 +62,7 @@ namespace BackendAPI.Services
                     Name = t.Name,
                     RazonSocial = t.RazonSocial,
                     NitRuc = t.NitRuc,
+                    DigitoVerificacion = t.DigitoVerificacion,
                     Direccion = t.Direccion,
                     Telefono = t.Telefono,
                     IsActive = t.IsActive,
@@ -64,7 +74,17 @@ namespace BackendAPI.Services
                     // Si el administrador corporativo (Admin) aún tiene contraseña temporal, está en espera
                     IsAdminTemporary = t.Users.Any(u => u.RoleId == adminRoleId && u.IsTemporaryPassword),
                     ServiceIds = t.EnabledServices.Select(s => s.Id).ToList(),
-                    DashboardCardIds = t.EnabledDashboardCards.Select(c => c.Id).ToList()
+                    DashboardCardIds = t.EnabledDashboardCards.Select(c => c.Id).ToList(),
+                    Ciiu = t.Ciiu,
+                    NumeroTrabajadores = t.NumeroTrabajadores,
+                    CentrosTrabajo = t.CentrosTrabajo,
+                    ClaseRiesgo = t.ClaseRiesgo,
+                    Arl = t.Arl,
+                    ResponsableSst = t.ResponsableSst,
+                    TieneCopasst = t.TieneCopasst,
+                    TieneComiteConvivencia = t.TieneComiteConvivencia,
+                    TieneBrigada = t.TieneBrigada,
+                    TieneContratistas = t.TieneContratistas
                 })
                 .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync();
@@ -85,6 +105,12 @@ namespace BackendAPI.Services
                 string.IsNullOrWhiteSpace(input.AdminEmail))
             {
                 return ServiceResult.BadRequest("El nombre, razón social, NIT/RUC e email del administrador son obligatorios.");
+            }
+
+            var digitoVerificacionCleaned = InputSanitizer.SanitizeText(input.DigitoVerificacion).Trim();
+            if (!IsValidDigitoVerificacion(digitoVerificacionCleaned))
+            {
+                return ServiceResult.BadRequest("El dígito de verificación del NIT debe ser un solo número.");
             }
 
             var nameCleaned = input.Name.Trim();
@@ -123,12 +149,23 @@ namespace BackendAPI.Services
                 Name = nameCleaned,
                 RazonSocial = input.RazonSocial.Trim(),
                 NitRuc = input.NitRuc.Trim(),
+                DigitoVerificacion = digitoVerificacionCleaned,
                 Direccion = (input.Direccion ?? "").Trim(),
                 Telefono = (input.Telefono ?? "").Trim(),
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 EnabledServices = selectedServices,
-                EnabledDashboardCards = selectedDashboardCards
+                EnabledDashboardCards = selectedDashboardCards,
+                Ciiu = InputSanitizer.SanitizeText(input.Ciiu).Trim(),
+                NumeroTrabajadores = Math.Max(0, input.NumeroTrabajadores),
+                CentrosTrabajo = Math.Max(0, input.CentrosTrabajo),
+                ClaseRiesgo = InputSanitizer.SanitizeText(input.ClaseRiesgo).Trim(),
+                Arl = InputSanitizer.SanitizeText(input.Arl).Trim(),
+                ResponsableSst = InputSanitizer.SanitizeText(input.ResponsableSst).Trim(),
+                TieneCopasst = input.TieneCopasst,
+                TieneComiteConvivencia = input.TieneComiteConvivencia,
+                TieneBrigada = input.TieneBrigada,
+                TieneContratistas = input.TieneContratistas
             };
 
             _dbContext.Tenants.Add(tenant);
@@ -178,6 +215,12 @@ namespace BackendAPI.Services
                 return ServiceResult.BadRequest("El nombre, razón social y NIT/RUC son requeridos.");
             }
 
+            var digitoVerificacionCleaned = InputSanitizer.SanitizeText(input.DigitoVerificacion).Trim();
+            if (!IsValidDigitoVerificacion(digitoVerificacionCleaned))
+            {
+                return ServiceResult.BadRequest("El dígito de verificación del NIT debe ser un solo número.");
+            }
+
             var tenant = await _dbContext.Tenants
                 .Include(t => t.EnabledServices)
                 .Include(t => t.EnabledDashboardCards)
@@ -200,8 +243,19 @@ namespace BackendAPI.Services
             tenant.Name = nameCleaned;
             tenant.RazonSocial = input.RazonSocial.Trim();
             tenant.NitRuc = input.NitRuc.Trim();
+            tenant.DigitoVerificacion = digitoVerificacionCleaned;
             tenant.Direccion = (input.Direccion ?? "").Trim();
             tenant.Telefono = (input.Telefono ?? "").Trim();
+            tenant.Ciiu = InputSanitizer.SanitizeText(input.Ciiu).Trim();
+            tenant.NumeroTrabajadores = Math.Max(0, input.NumeroTrabajadores);
+            tenant.CentrosTrabajo = Math.Max(0, input.CentrosTrabajo);
+            tenant.ClaseRiesgo = InputSanitizer.SanitizeText(input.ClaseRiesgo).Trim();
+            tenant.Arl = InputSanitizer.SanitizeText(input.Arl).Trim();
+            tenant.ResponsableSst = InputSanitizer.SanitizeText(input.ResponsableSst).Trim();
+            tenant.TieneCopasst = input.TieneCopasst;
+            tenant.TieneComiteConvivencia = input.TieneComiteConvivencia;
+            tenant.TieneBrigada = input.TieneBrigada;
+            tenant.TieneContratistas = input.TieneContratistas;
 
             if (input.ServiceIds != null)
             {

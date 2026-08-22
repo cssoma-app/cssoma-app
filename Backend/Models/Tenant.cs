@@ -9,11 +9,27 @@ namespace BackendAPI.Models
         public string Name { get; set; } = string.Empty;
         public string RazonSocial { get; set; } = string.Empty;
         public string NitRuc { get; set; } = string.Empty;
+        // Dígito de verificación del NIT (1 carácter), guardado aparte del número principal
+        // para poder renderizarlo separado por guion en el frontend sin parsear el string.
+        public string DigitoVerificacion { get; set; } = string.Empty;
         public string Direccion { get; set; } = string.Empty;
         public string Telefono { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
         public bool IsPlatformOwner { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // Perfil SST de la empresa (ver AGENTS.md — captura básica a nivel de empresa,
+        // independiente del detalle transaccional del módulo Diseño e Implementación SG-SST).
+        public string Ciiu { get; set; } = string.Empty;
+        public int NumeroTrabajadores { get; set; } = 0;
+        public int CentrosTrabajo { get; set; } = 0;
+        public string ClaseRiesgo { get; set; } = string.Empty;
+        public string Arl { get; set; } = string.Empty;
+        public string ResponsableSst { get; set; } = string.Empty;
+        public bool TieneCopasst { get; set; } = false;
+        public bool TieneComiteConvivencia { get; set; } = false;
+        public bool TieneBrigada { get; set; } = false;
+        public bool TieneContratistas { get; set; } = false;
 
         // Navigation properties
         public ICollection<User> Users { get; set; } = new List<User>();

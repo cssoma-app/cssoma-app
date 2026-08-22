@@ -142,6 +142,65 @@ namespace BackendAPI.Tests
         }
 
         [Fact]
+        public async Task CreateTenant_WithInvalidDigitoVerificacion_ReturnsBadRequest()
+        {
+            SetActorAsPlatformOwnerAdmin();
+            var controller = BuildController();
+
+            var result = await controller.CreateTenant(new CreateTenantRequest
+            {
+                Name = "Empresa DV Inválido",
+                RazonSocial = "DV S.A.S.",
+                NitRuc = "123456789",
+                DigitoVerificacion = "12", // más de un dígito
+                AdminEmail = "admin@dvinvalido.com"
+            });
+
+            Assert.IsType<BadRequestObjectResult>(result);
+            Assert.False(await _dbContext.Tenants.AnyAsync(t => t.Name == "Empresa DV Inválido"));
+        }
+
+        [Fact]
+        public async Task CreateTenant_WithSstProfileFields_PersistsThem()
+        {
+            SetActorAsPlatformOwnerAdmin();
+            var controller = BuildController();
+
+            var result = await controller.CreateTenant(new CreateTenantRequest
+            {
+                Name = "Empresa Perfil SST",
+                RazonSocial = "Perfil S.A.S.",
+                NitRuc = "900123456",
+                DigitoVerificacion = "7",
+                AdminEmail = "admin@perfilsst.com",
+                Ciiu = "1071",
+                NumeroTrabajadores = 25,
+                CentrosTrabajo = 2,
+                ClaseRiesgo = "III",
+                Arl = "Sura",
+                ResponsableSst = "Juan Pérez",
+                TieneCopasst = true,
+                TieneComiteConvivencia = true,
+                TieneBrigada = false,
+                TieneContratistas = true
+            });
+
+            Assert.IsType<OkObjectResult>(result);
+            var created = await _dbContext.Tenants.IgnoreQueryFilters().FirstAsync(t => t.Name == "Empresa Perfil SST");
+            Assert.Equal("7", created.DigitoVerificacion);
+            Assert.Equal("1071", created.Ciiu);
+            Assert.Equal(25, created.NumeroTrabajadores);
+            Assert.Equal(2, created.CentrosTrabajo);
+            Assert.Equal("III", created.ClaseRiesgo);
+            Assert.Equal("Sura", created.Arl);
+            Assert.Equal("Juan Pérez", created.ResponsableSst);
+            Assert.True(created.TieneCopasst);
+            Assert.True(created.TieneComiteConvivencia);
+            Assert.False(created.TieneBrigada);
+            Assert.True(created.TieneContratistas);
+        }
+
+        [Fact]
         public async Task DeleteTenant_TargetingPlatformOwnerTenant_IsBlockedEvenForSuperAdmin()
         {
             SetActorAsSuperAdmin();

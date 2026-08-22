@@ -84,6 +84,24 @@ namespace BackendAPI.Controllers
             return Ok(new { All = false, Keys = keys });
         }
 
+        // Selector de empresa (cambio de contexto de tenant): solo SuperAdmin o el Admin de la
+        // empresa propietaria de la plataforma (ver AuthService.SwitchTenantContextAsync).
+        // [DisableRateLimiting]: se puede llamar varias veces seguidas navegando entre empresas,
+        // no es un vector de fuerza bruta (mismo criterio que my-services/my-dashboard-cards).
+        [Authorize(Roles = "SuperAdmin,Admin")]
+        [DisableRateLimiting]
+        [HttpPost("switch-tenant/{tenantId}")]
+        public async Task<IActionResult> SwitchTenant(System.Guid tenantId)
+        {
+            var token = await _authService.SwitchTenantContextAsync(tenantId);
+            if (token == null)
+            {
+                return Forbid();
+            }
+
+            return Ok(new { Token = token });
+        }
+
         [HttpPost("request-code")]
         public async Task<IActionResult> RequestCode([FromBody] RequestCodeRequest request)
         {
