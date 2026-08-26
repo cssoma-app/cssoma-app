@@ -4,7 +4,9 @@ import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { ThemeToggle } from "@/components/ThemeToggle"
-import { Home, FileText, LogOut, Building, User as UserIcon, Menu, Briefcase, GitBranch, UserCog, ShieldCheck, ChevronDown, Code2, LayoutDashboard, Bell, Check, Trash2, HardHat, ClipboardList } from "lucide-react"
+import { ServiciosSSTMenu } from "@/components/layout/ServiciosSSTMenu"
+import { ServiciosAmbientalMenu } from "@/components/layout/ServiciosAmbientalMenu"
+import { Home, FileText, LogOut, Building, User as UserIcon, Menu, Briefcase, GitBranch, UserCog, ShieldCheck, ChevronDown, Code2, LayoutDashboard, Bell, Check, Trash2, HardHat, Globe2 } from "lucide-react"
 import Image from "next/image"
 
 interface AlertItem {
@@ -43,12 +45,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   const [isAdminGroupOpen, setIsAdminGroupOpen] = useState(false)
   const [isDevGroupOpen, setIsDevGroupOpen] = useState(false)
-  const [isSstGroupOpen, setIsSstGroupOpen] = useState(false)
+  const [isServiciosSSTOpen, setIsServiciosSSTOpen] = useState(false)
+  const [isServiciosAmbientalOpen, setIsServiciosAmbientalOpen] = useState(false)
 
   useEffect(() => {
     if (adminGroupPaths.includes(pathname)) setIsAdminGroupOpen(true)
     if (devGroupPaths.includes(pathname)) setIsDevGroupOpen(true)
-    if (sstGroupPaths.includes(pathname)) setIsSstGroupOpen(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
@@ -328,27 +330,23 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               )}
             </div>
 
-            {/* Grupo Seguridad y Salud (SST) */}
-            <div>
-              <button
-                onClick={() => setIsSstGroupOpen(!isSstGroupOpen)}
-                className={`flex items-center justify-between w-full gap-3 rounded-xl px-4 py-3 transition-all duration-300 ${sstGroupPaths.includes(pathname) ? "text-primary font-semibold" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
-              >
-                <span className="flex items-center gap-3">
-                  <HardHat size={18} />
-                  Seguridad y Salud (SST)
-                </span>
-                <ChevronDown size={16} className={`transition-transform duration-200 ${isSstGroupOpen ? "rotate-180" : ""}`} />
-              </button>
-              {isSstGroupOpen && (
-                <div className="flex flex-col gap-1 mt-1 pl-4 border-l border-border/50 ml-4">
-                  <Link href="/dashboard/sgsst-diseno" onClick={() => handleNavClick("/dashboard/sgsst-diseno")} className={getLinkClass("/dashboard/sgsst-diseno")}>
-                    <ClipboardList size={16} />
-                    Diseño e implementación SG-SST PYME
-                  </Link>
-                </div>
-              )}
-            </div>
+            {/* Servicios SST */}
+            <button
+              onClick={() => setIsServiciosSSTOpen(true)}
+              className={`flex items-center gap-3 w-full rounded-xl px-4 py-3 transition-all duration-300 text-left ${sstGroupPaths.includes(pathname) ? "text-primary font-semibold" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+            >
+              <HardHat size={18} />
+              Servicios SST
+            </button>
+
+            {/* Ingeniería Ambiental */}
+            <button
+              onClick={() => setIsServiciosAmbientalOpen(true)}
+              className="flex items-center gap-3 w-full rounded-xl px-4 py-3 transition-all duration-300 text-left text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <Globe2 size={18} />
+              Ingeniería Ambiental
+            </button>
 
             {/* Grupo Desarrollo */}
             {hasBroadAccess && canSeeService("pipeline") && (
@@ -550,6 +548,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+
+      <ServiciosSSTMenu isOpen={isServiciosSSTOpen} onClose={() => setIsServiciosSSTOpen(false)} />
+      <ServiciosAmbientalMenu isOpen={isServiciosAmbientalOpen} onClose={() => setIsServiciosAmbientalOpen(false)} />
     </div>
   )
 }
