@@ -435,7 +435,9 @@ namespace BackendAPI.Services
             }
             catch (Exception ex)
             {
-                return ServiceResult.Error($"Contraseña regenerada, pero falló el envío del email: {ex.Message}");
+                // La contraseña ya quedó guardada (hasheada) arriba — sin esto el admin no tiene forma
+                // de recuperar el valor en texto plano si el envío de correo falla (ej. Resend caído).
+                return ServiceResult.Error($"Contraseña regenerada, pero falló el envío del email: {ex.Message}. Contraseña temporal: {tempPassword} (compártela manualmente con el usuario; el sistema le pedirá cambiarla al iniciar sesión).");
             }
 
             return ServiceResult.Ok("Invitación reenviada con éxito.");
