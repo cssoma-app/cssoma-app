@@ -24,6 +24,9 @@ namespace BackendAPI.Data
         public DbSet<SassService> SassServices { get; set; }
         public DbSet<DashboardCard> DashboardCards { get; set; }
         public DbSet<Alert> Alerts { get; set; }
+        public DbSet<SgSstFunctionCatalog> SgSstFunctionCatalogs { get; set; }
+        public DbSet<SgSstResponsibleDesignation> SgSstResponsibleDesignations { get; set; }
+        public DbSet<SgSstDesignationFunction> SgSstDesignationFunctions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,6 +40,10 @@ namespace BackendAPI.Data
             modelBuilder.Entity<SassService>().HasIndex(s => s.Key).IsUnique();
             modelBuilder.Entity<DashboardCard>().HasIndex(d => d.Key).IsUnique();
             modelBuilder.Entity<Alert>().HasIndex(a => new { a.RecipientUserId, a.IsAccepted });
+            modelBuilder.Entity<SgSstFunctionCatalog>().HasIndex(f => f.Code).IsUnique();
+            modelBuilder.Entity<SgSstResponsibleDesignation>().HasIndex(d => new { d.TenantId, d.Status });
+            modelBuilder.Entity<SgSstResponsibleDesignation>().HasIndex(d => new { d.TenantId, d.Version }).IsUnique();
+            modelBuilder.Entity<SgSstDesignationFunction>().HasKey(df => new { df.DesignationId, df.FunctionId });
 
             // Relaciones
             modelBuilder.Entity<User>()
@@ -74,6 +81,25 @@ namespace BackendAPI.Data
                 .HasForeignKey(a => a.RecipientUserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // SG-SST Responsable Designations
+            modelBuilder.Entity<SgSstResponsibleDesignation>()
+                .HasOne(d => d.Tenant)
+                .WithMany()
+                .HasForeignKey(d => d.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SgSstDesignationFunction>()
+                .HasOne(df => df.Designation)
+                .WithMany(d => d.DesignationFunctions)
+                .HasForeignKey(df => df.DesignationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SgSstDesignationFunction>()
+                .HasOne(df => df.Function)
+                .WithMany(f => f.DesignationFunctions)
+                .HasForeignKey(df => df.FunctionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // Global Query Filters (se evalúan en tiempo de ejecución por petición)
             modelBuilder.Entity<User>().HasQueryFilter(u => 
                 (_currentUserService != null && _currentUserService.IsSuperAdmin) || 
@@ -90,6 +116,10 @@ namespace BackendAPI.Data
             modelBuilder.Entity<Alert>().HasQueryFilter(a =>
                 (_currentUserService != null && _currentUserService.IsSuperAdmin) ||
                 a.TenantId == (_currentUserService != null && _currentUserService.TenantId.HasValue ? _currentUserService.TenantId.Value : Guid.Empty));
+
+            modelBuilder.Entity<SgSstResponsibleDesignation>().HasQueryFilter(d =>
+                (_currentUserService != null && _currentUserService.IsSuperAdmin) ||
+                d.TenantId == (_currentUserService != null && _currentUserService.TenantId.HasValue ? _currentUserService.TenantId.Value : Guid.Empty));
         }
     }
 }

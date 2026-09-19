@@ -59,6 +59,9 @@ builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<IDashboardCardService, DashboardCardService>();
 builder.Services.AddScoped<IServicesService, ServicesService>();
 builder.Services.AddScoped<IAlertService, AlertService>();
+builder.Services.AddSingleton<IResolucion0312ComplianceValidator, Resolucion0312ComplianceValidator>();
+builder.Services.AddScoped<ISgSstFunctionCatalogReader, SgSstFunctionCatalogReader>();
+builder.Services.AddScoped<ISgSstResponsibleDesignationService, SgSstResponsibleDesignationService>();
 builder.Services.AddScoped<Microsoft.AspNetCore.Identity.IPasswordHasher<BackendAPI.Models.User>, Microsoft.AspNetCore.Identity.PasswordHasher<BackendAPI.Models.User>>();
 
 // Configure CORS
