@@ -7,6 +7,11 @@ namespace BackendAPI.Contracts
         public string CoberturaCentroTrabajo { get; set; } = string.Empty;
         public string? CoberturaDetalle { get; set; }
 
+        public string OrganizacionDepartamento { get; set; } = string.Empty;
+        public string OrganizacionMunicipio { get; set; } = string.Empty;
+        public string OrganizacionNivelRiesgoArl { get; set; } = string.Empty;
+        public string OrganizacionActividadEconomica { get; set; } = string.Empty;
+
         public string ResponsableNombreCompleto { get; set; } = string.Empty;
         public string ResponsableCargo { get; set; } = string.Empty;
         public DocumentIdType ResponsableTipoDocumento { get; set; }
@@ -21,10 +26,12 @@ namespace BackendAPI.Contracts
         public string EmpleadorAceptaNombre { get; set; } = string.Empty;
         public string EmpleadorAceptaCargo { get; set; } = string.Empty;
         public string EmpleadorAceptaDocumento { get; set; } = string.Empty;
+        public string? EmpleadorFirmaImagen { get; set; }
 
         public string ResponsableAceptaNombre { get; set; } = string.Empty;
         public string ResponsableAceptaLicencia { get; set; } = string.Empty;
         public string ResponsableAceptaDocumento { get; set; } = string.Empty;
+        public string? ResponsableFirmaImagen { get; set; }
 
         public string SuscripcionCiudad { get; set; } = string.Empty;
         public DateTime SuscripcionFecha { get; set; }

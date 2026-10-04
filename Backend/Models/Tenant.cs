@@ -18,6 +18,12 @@ namespace BackendAPI.Models
         public bool IsPlatformOwner { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        // Logo de la empresa (PNG/JPEG/WebP) capturado como data URL en base64, mostrado en el
+        // encabezado de los formatos SG-SST que se radican en representación de esta empresa —
+        // nunca el logo de la plataforma. Nulo hasta que el Admin lo suba; el frontend cae al
+        // nombre de la empresa como logo textual cuando no hay imagen (ver diseño de formularios).
+        public string? LogoUrl { get; set; }
+
         // Perfil SST de la empresa (ver AGENTS.md — captura básica a nivel de empresa,
         // independiente del detalle transaccional del módulo Diseño e Implementación SG-SST).
         public string Ciiu { get; set; } = string.Empty;

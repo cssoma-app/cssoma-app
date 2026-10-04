@@ -13,6 +13,13 @@ namespace BackendAPI.Models
         public string CoberturaCentroTrabajo { get; set; } = string.Empty;
         public string? CoberturaDetalle { get; set; }
 
+        // Snapshot de ubicación de la organización al momento de la designación (independiente
+        // de los datos del Tenant, que pueden cambiar después sin afectar el histórico).
+        public string OrganizacionDepartamento { get; set; } = string.Empty;
+        public string OrganizacionMunicipio { get; set; } = string.Empty;
+        public string OrganizacionNivelRiesgoArl { get; set; } = string.Empty;
+        public string OrganizacionActividadEconomica { get; set; } = string.Empty;
+
         public string ResponsableNombreCompleto { get; set; } = string.Empty;
         public string ResponsableCargo { get; set; } = string.Empty;
         public DocumentIdType ResponsableTipoDocumento { get; set; }
@@ -28,11 +35,15 @@ namespace BackendAPI.Models
         public string EmpleadorAceptaCargo { get; set; } = string.Empty;
         public string EmpleadorAceptaDocumento { get; set; } = string.Empty;
         public DateTime? EmpleadorAceptaFechaHora { get; set; }
+        // Firma dibujada a mano en el canvas, capturada como PNG en base64 (data URL). Nula si
+        // el firmante no dibujó nada (la aceptación sigue siendo válida vía los campos de texto).
+        public string? EmpleadorFirmaImagen { get; set; }
 
         public string ResponsableAceptaNombre { get; set; } = string.Empty;
         public string ResponsableAceptaLicencia { get; set; } = string.Empty;
         public string ResponsableAceptaDocumento { get; set; } = string.Empty;
         public DateTime? ResponsableAceptaFechaHora { get; set; }
+        public string? ResponsableFirmaImagen { get; set; }
 
         public string SuscripcionCiudad { get; set; } = string.Empty;
         public DateTime SuscripcionFecha { get; set; }

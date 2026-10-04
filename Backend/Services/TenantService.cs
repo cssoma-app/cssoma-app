@@ -46,6 +46,57 @@ namespace BackendAPI.Services
                    (digitoVerificacion.Length == 1 && char.IsDigit(digitoVerificacion[0]));
         }
 
+        public async Task<ServiceResult<TenantListItemDto>> GetCurrentTenantAsync()
+        {
+            var tenantId = _currentUserService.TenantId;
+            if (tenantId == Guid.Empty)
+            {
+                return ServiceResult<TenantListItemDto>.Forbidden();
+            }
+
+            var adminRoleId = RoleKeys.AdminId;
+            var tenant = await _dbContext.Tenants
+                .Where(t => t.Id == tenantId)
+                .Select(t => new TenantListItemDto
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    RazonSocial = t.RazonSocial,
+                    NitRuc = t.NitRuc,
+                    DigitoVerificacion = t.DigitoVerificacion,
+                    Direccion = t.Direccion,
+                    Telefono = t.Telefono,
+                    IsActive = t.IsActive,
+                    CreatedAt = t.CreatedAt,
+                    UsersCount = t.Users.Count,
+                    EmployeesCount = t.Employees.Count,
+                    DocumentsCount = t.Documents.Count,
+                    AdminEmail = t.Users.Where(u => u.RoleId == adminRoleId).Select(u => u.Email).FirstOrDefault() ?? "",
+                    IsAdminTemporary = t.Users.Any(u => u.RoleId == adminRoleId && u.IsTemporaryPassword),
+                    ServiceIds = t.EnabledServices.Select(s => s.Id).ToList(),
+                    DashboardCardIds = t.EnabledDashboardCards.Select(c => c.Id).ToList(),
+                    Ciiu = t.Ciiu,
+                    NumeroTrabajadores = t.NumeroTrabajadores,
+                    CentrosTrabajo = t.CentrosTrabajo,
+                    ClaseRiesgo = t.ClaseRiesgo,
+                    Arl = t.Arl,
+                    ResponsableSst = t.ResponsableSst,
+                    TieneCopasst = t.TieneCopasst,
+                    TieneComiteConvivencia = t.TieneComiteConvivencia,
+                    TieneBrigada = t.TieneBrigada,
+                    TieneContratistas = t.TieneContratistas,
+                    LogoUrl = t.LogoUrl
+                })
+                .FirstOrDefaultAsync();
+
+            if (tenant == null)
+            {
+                return ServiceResult<TenantListItemDto>.NotFound("Tenant not found");
+            }
+
+            return ServiceResult<TenantListItemDto>.Ok(tenant);
+        }
+
         public async Task<ServiceResult<List<TenantListItemDto>>> GetTenantsAsync()
         {
             if (!CanManageTenants())
@@ -84,7 +135,8 @@ namespace BackendAPI.Services
                     TieneCopasst = t.TieneCopasst,
                     TieneComiteConvivencia = t.TieneComiteConvivencia,
                     TieneBrigada = t.TieneBrigada,
-                    TieneContratistas = t.TieneContratistas
+                    TieneContratistas = t.TieneContratistas,
+                    LogoUrl = t.LogoUrl
                 })
                 .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync();
@@ -165,7 +217,8 @@ namespace BackendAPI.Services
                 TieneCopasst = input.TieneCopasst,
                 TieneComiteConvivencia = input.TieneComiteConvivencia,
                 TieneBrigada = input.TieneBrigada,
-                TieneContratistas = input.TieneContratistas
+                TieneContratistas = input.TieneContratistas,
+                LogoUrl = ImageValidationHelper.SanitizeImageDataUrl(input.LogoUrl)
             };
 
             _dbContext.Tenants.Add(tenant);
@@ -256,6 +309,9 @@ namespace BackendAPI.Services
             tenant.TieneComiteConvivencia = input.TieneComiteConvivencia;
             tenant.TieneBrigada = input.TieneBrigada;
             tenant.TieneContratistas = input.TieneContratistas;
+            // Vacío/nulo = el Admin quitó el logo explícitamente; un valor no vacío se valida
+            // igual que en la creación (formato y tamaño), descartando silenciosamente si no cumple.
+            tenant.LogoUrl = string.IsNullOrEmpty(input.LogoUrl) ? null : ImageValidationHelper.SanitizeImageDataUrl(input.LogoUrl);
 
             if (input.ServiceIds != null)
             {

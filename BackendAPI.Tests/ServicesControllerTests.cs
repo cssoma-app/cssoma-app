@@ -75,7 +75,8 @@ namespace BackendAPI.Tests
 
             var result = await controller.GetServices();
 
-            Assert.IsType<ForbidResult>(result);
+            var forbiddenResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(403, forbiddenResult.StatusCode);
         }
 
         [Fact]
@@ -104,7 +105,8 @@ namespace BackendAPI.Tests
 
             var result = await controller.ToggleService(_serviceId);
 
-            Assert.IsType<ForbidResult>(result);
+            var forbiddenResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(403, forbiddenResult.StatusCode);
             var service = await _dbContext.SassServices.FirstAsync(s => s.Id == _serviceId);
             Assert.True(service.IsEnabled); // no se modificó
         }

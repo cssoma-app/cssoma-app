@@ -25,6 +25,7 @@ namespace BackendAPI.Contracts
         public bool TieneComiteConvivencia { get; set; }
         public bool TieneBrigada { get; set; }
         public bool TieneContratistas { get; set; }
+        public string? LogoUrl { get; set; }
     }
 
     public class UpdateTenantRequest
@@ -49,5 +50,6 @@ namespace BackendAPI.Contracts
         public bool TieneComiteConvivencia { get; set; }
         public bool TieneBrigada { get; set; }
         public bool TieneContratistas { get; set; }
+        public string? LogoUrl { get; set; }
     }
 }

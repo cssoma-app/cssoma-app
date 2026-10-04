@@ -101,7 +101,8 @@ namespace BackendAPI.Tests
 
             var result = await controller.GetTenants();
 
-            Assert.IsType<ForbidResult>(result);
+            var forbiddenResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(403, forbiddenResult.StatusCode);
         }
 
         [Fact]
@@ -118,7 +119,8 @@ namespace BackendAPI.Tests
                 AdminEmail = "intruso@x.com"
             });
 
-            Assert.IsType<ForbidResult>(result);
+            var forbiddenResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(403, forbiddenResult.StatusCode);
             Assert.False(await _dbContext.Tenants.AnyAsync(t => t.Name == "Empresa Intrusa"));
         }
 
@@ -220,7 +222,8 @@ namespace BackendAPI.Tests
 
             var result = await controller.ToggleActive(_clientTenantId);
 
-            Assert.IsType<ForbidResult>(result);
+            var forbiddenResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(403, forbiddenResult.StatusCode);
         }
     }
 }

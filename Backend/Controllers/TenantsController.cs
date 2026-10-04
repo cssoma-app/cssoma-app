@@ -10,7 +10,6 @@ namespace BackendAPI.Controllers
     // Controller delgado: toda la lógica de negocio vive en ITenantService (Regla 2, AGENTS.md).
     // Habilitado también para Admin: solo el Admin del tenant propietario de la plataforma pasa
     // el guard interno del service; un Admin de cualquier otra empresa cliente queda en 403.
-    [Authorize(Roles = "SuperAdmin,Admin")]
     [ApiController]
     [Route("api/tenants")]
     public class TenantsController : ControllerBase
@@ -22,6 +21,15 @@ namespace BackendAPI.Controllers
             _tenantService = tenantService;
         }
 
+        [Authorize]
+        [HttpGet("current")]
+        public async Task<IActionResult> GetCurrentTenant()
+        {
+            var result = await _tenantService.GetCurrentTenantAsync();
+            return this.ToActionResult(result);
+        }
+
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpGet]
         public async Task<IActionResult> GetTenants()
         {
@@ -29,6 +37,7 @@ namespace BackendAPI.Controllers
             return this.ToActionResult(result);
         }
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpPost]
         public async Task<IActionResult> CreateTenant([FromBody] CreateTenantRequest request)
         {
@@ -52,11 +61,13 @@ namespace BackendAPI.Controllers
                 TieneCopasst = request?.TieneCopasst ?? false,
                 TieneComiteConvivencia = request?.TieneComiteConvivencia ?? false,
                 TieneBrigada = request?.TieneBrigada ?? false,
-                TieneContratistas = request?.TieneContratistas ?? false
+                TieneContratistas = request?.TieneContratistas ?? false,
+                LogoUrl = request?.LogoUrl
             });
             return this.ToActionResult(result);
         }
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTenant(Guid id, [FromBody] UpdateTenantRequest request)
         {
@@ -79,11 +90,13 @@ namespace BackendAPI.Controllers
                 TieneCopasst = request?.TieneCopasst ?? false,
                 TieneComiteConvivencia = request?.TieneComiteConvivencia ?? false,
                 TieneBrigada = request?.TieneBrigada ?? false,
-                TieneContratistas = request?.TieneContratistas ?? false
+                TieneContratistas = request?.TieneContratistas ?? false,
+                LogoUrl = request?.LogoUrl
             });
             return this.ToActionResult(result);
         }
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTenant(Guid id)
         {
@@ -91,6 +104,7 @@ namespace BackendAPI.Controllers
             return this.ToActionResult(result);
         }
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpPost("toggle-active/{id}")]
         public async Task<IActionResult> ToggleActive(Guid id)
         {
@@ -98,6 +112,7 @@ namespace BackendAPI.Controllers
             return this.ToActionResult(result);
         }
 
+        [Authorize(Roles = "SuperAdmin,Admin")]
         [HttpPost("resend-welcome/{id}")]
         public async Task<IActionResult> ResendWelcome(Guid id)
         {

@@ -14,7 +14,7 @@ namespace BackendAPI.Controllers
                 ServiceOutcome.Ok => controller.Ok(new { Message = result.Message }),
                 ServiceOutcome.BadRequest => controller.BadRequest(new { Message = result.Message }),
                 ServiceOutcome.NotFound => controller.NotFound(new { Message = result.Message }),
-                ServiceOutcome.Forbidden => controller.Forbid(),
+                ServiceOutcome.Forbidden => controller.StatusCode(403, new { Message = "No tiene permisos para realizar esta acción." }),
                 ServiceOutcome.Error => controller.StatusCode(500, new { Message = result.Message }),
                 _ => controller.StatusCode(500)
             };
@@ -29,7 +29,7 @@ namespace BackendAPI.Controllers
                 ServiceOutcome.Ok => controller.Ok(result.Data),
                 ServiceOutcome.BadRequest => controller.BadRequest(new { Message = result.Message }),
                 ServiceOutcome.NotFound => controller.NotFound(new { Message = result.Message }),
-                ServiceOutcome.Forbidden => controller.Forbid(),
+                ServiceOutcome.Forbidden => controller.StatusCode(403, new { Message = "No tiene permisos para realizar esta acción." }),
                 ServiceOutcome.Error => controller.StatusCode(500, new { Message = result.Message }),
                 _ => controller.StatusCode(500)
             };

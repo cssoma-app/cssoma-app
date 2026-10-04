@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { useNotification } from "@/context/NotificationContext"
 import {
@@ -76,12 +77,7 @@ const RECURSOS_ITEMS: RecursoItem[] = [
   {
     label: "Presupuesto y asignación de recursos SG-SST",
     icon: Wallet,
-    fields: [
-      { key: "concepto", label: "Concepto / Rubro", type: "text", required: true },
-      { key: "monto", label: "Monto Asignado (COP)", type: "number", required: true },
-      { key: "periodo", label: "Periodo", type: "text", required: true, placeholder: "Ej. 2026" },
-      OBSERVACIONES_FIELD,
-    ],
+    fields: [],
   },
   {
     label: "Afiliación al Sistema General de Riesgos Laborales",
@@ -1104,6 +1100,66 @@ export default function SgSstDisenoPage() {
     setItemStatuses((prev) => ({ ...prev, [label]: prev[label] === status ? "pendiente" : status }))
   }
 
+  // Designación del Responsable SG-SST sí tiene backend real: si ya existe una designación
+  // vigente (radicada), el ítem se marca "Cumplido" automáticamente en vez de quedar en mock.
+  useEffect(() => {
+    const checkDesignacionResponsable = async () => {
+      try {
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5166"
+        const token = document.cookie.split("; ").find((row) => row.startsWith("token="))?.split("=")[1]
+        if (!token) return
+
+        const res = await fetch(`${apiBaseUrl}/api/sgsst/responsible-designations/current`, {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        })
+        if (!res.ok) return
+
+        const text = await res.text()
+        if (!text) return
+
+        const current = JSON.parse(text)
+        if (current) {
+          setItemStatuses((prev) => ({ ...prev, ["Designación del responsable del SG-SST"]: "cumplido" }))
+        }
+      } catch {
+        // Si falla, el ítem simplemente queda en su estado por defecto (pendiente).
+      }
+    }
+
+    checkDesignacionResponsable()
+  }, [])
+
+  // Presupuesto y Asignación de Recursos SG-SST también tiene backend real: si ya existe un
+  // plan presupuestal vigente (radicado), el ítem se marca "Cumplido" automáticamente.
+  useEffect(() => {
+    const checkPresupuestoRecursos = async () => {
+      try {
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5166"
+        const token = document.cookie.split("; ").find((row) => row.startsWith("token="))?.split("=")[1]
+        if (!token) return
+
+        const res = await fetch(`${apiBaseUrl}/api/sgsst/budget-plans/current`, {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        })
+        if (!res.ok) return
+
+        const text = await res.text()
+        if (!text) return
+
+        const current = JSON.parse(text)
+        if (current) {
+          setItemStatuses((prev) => ({ ...prev, ["Presupuesto y asignación de recursos SG-SST"]: "cumplido" }))
+        }
+      } catch {
+        // Si falla, el ítem simplemente queda en su estado por defecto (pendiente).
+      }
+    }
+
+    checkPresupuestoRecursos()
+  }, [])
+
   // % cumplido del grupo: los ítems "no obligatorio" no cuentan ni a favor ni en contra.
   const getGroupProgress = (items: RecursoItem[]): number | null => {
     if (items.length === 0) return null
@@ -1113,7 +1169,19 @@ export default function SgSstDisenoPage() {
     return Math.round((completed / applicable.length) * 100)
   }
 
+  const router = useRouter()
+
   const openItemModal = (item: RecursoItem) => {
+    // Navegar a la nueva página de Designación del Responsable
+    if (item.label === "Designación del responsable del SG-SST") {
+      router.push("/dashboard/sgsst-diseno/recursos/designacion-responsable")
+      return
+    }
+    if (item.label === "Presupuesto y asignación de recursos SG-SST") {
+      router.push("/dashboard/sgsst-diseno/recursos/presupuesto-recursos")
+      return
+    }
+
     setOpenItem(item)
     setFormValues({})
     setFileValues({})

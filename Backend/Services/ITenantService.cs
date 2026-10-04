@@ -6,6 +6,7 @@ namespace BackendAPI.Services
 {
     public interface ITenantService
     {
+        Task<ServiceResult<TenantListItemDto>> GetCurrentTenantAsync();
         Task<ServiceResult<List<TenantListItemDto>>> GetTenantsAsync();
         Task<ServiceResult> CreateTenantAsync(CreateTenantInput input);
         Task<ServiceResult> UpdateTenantAsync(Guid id, UpdateTenantInput input);
@@ -42,6 +43,7 @@ namespace BackendAPI.Services
         public bool TieneComiteConvivencia { get; set; }
         public bool TieneBrigada { get; set; }
         public bool TieneContratistas { get; set; }
+        public string? LogoUrl { get; set; }
     }
 
     public class CreateTenantInput
@@ -65,6 +67,7 @@ namespace BackendAPI.Services
         public bool TieneComiteConvivencia { get; set; }
         public bool TieneBrigada { get; set; }
         public bool TieneContratistas { get; set; }
+        public string? LogoUrl { get; set; }
     }
 
     public class UpdateTenantInput
@@ -87,5 +90,6 @@ namespace BackendAPI.Services
         public bool TieneComiteConvivencia { get; set; }
         public bool TieneBrigada { get; set; }
         public bool TieneContratistas { get; set; }
+        public string? LogoUrl { get; set; }
     }
 }

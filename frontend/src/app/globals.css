@@ -7,6 +7,15 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand-50: #F0F5FA;
+  --color-brand-100: #E1EBF5;
+  --color-brand-200: #C7D9EC;
+  --color-brand-600: #1E3A8A;
+  --color-brand-700: #1B3170;
+  --color-brand-800: #152554;
+  --color-brand-900: #0F172A;
+  --color-accent-500: #0284C7;
+  --color-accent-600: #0369A1;
   --font-sans: var(--font-outfit), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);

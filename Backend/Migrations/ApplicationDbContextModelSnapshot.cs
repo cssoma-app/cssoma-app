@@ -129,6 +129,47 @@ namespace BackendAPI.Migrations
                     b.ToTable("Documents");
                 });
 
+            modelBuilder.Entity("BackendAPI.Models.DocumentTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("DocumentTemplates");
+                });
+
             modelBuilder.Entity("BackendAPI.Models.Employee", b =>
                 {
                     b.Property<Guid>("Id")
@@ -216,6 +257,311 @@ namespace BackendAPI.Migrations
                     b.ToTable("SassServices");
                 });
 
+            modelBuilder.Entity("BackendAPI.Models.SgSstBudgetLineItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AreaResponsable")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("BudgetPlanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CategoriaNombre")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("CategoriaOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Codigo")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Concepto")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EstadoManual")
+                        .HasColumnType("text");
+
+                    b.Property<int>("FasePhva")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("MesProgramado")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SoporteComprobante")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("ValorEjecutado")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("ValorPresupuestado")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BudgetPlanId");
+
+                    b.ToTable("SgSstBudgetLineItems");
+                });
+
+            modelBuilder.Entity("BackendAPI.Models.SgSstBudgetPlan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RepresentanteLegalDocumento")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("RepresentanteLegalFechaHora")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RepresentanteLegalFirmaImagen")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RepresentanteLegalNombre")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ResponsableSgSstDocumento")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ResponsableSgSstFechaHora")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ResponsableSgSstFirmaImagen")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ResponsableSgSstNombre")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Vigencia")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Status");
+
+                    b.HasIndex("TenantId", "Version")
+                        .IsUnique();
+
+                    b.ToTable("SgSstBudgetPlans");
+                });
+
+            modelBuilder.Entity("BackendAPI.Models.SgSstDesignationFunction", b =>
+                {
+                    b.Property<Guid>("DesignationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("FunctionId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsAccepted")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("DesignationId", "FunctionId");
+
+                    b.HasIndex("FunctionId");
+
+                    b.ToTable("SgSstDesignationFunctions");
+                });
+
+            modelBuilder.Entity("BackendAPI.Models.SgSstFunctionCatalog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("SgSstFunctionCatalogs");
+                });
+
+            modelBuilder.Entity("BackendAPI.Models.SgSstResponsibleDesignation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CoberturaCentroTrabajo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CoberturaDetalle")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ComplianceNota")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ComplianceStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Curso50HorasAprobado")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("EmpleadorAceptaCargo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("EmpleadorAceptaDocumento")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("EmpleadorAceptaFechaHora")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EmpleadorAceptaNombre")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("EmpleadorFirmaImagen")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("FechaActualizacion20Horas")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LicenciaSstExpedidaPor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("LicenciaSstNumero")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("NivelCompetencia")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("OrganizacionActividadEconomica")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("OrganizacionDepartamento")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("OrganizacionMunicipio")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("OrganizacionNivelRiesgoArl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ResponsableAceptaDocumento")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ResponsableAceptaFechaHora")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ResponsableAceptaLicencia")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ResponsableAceptaNombre")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ResponsableCargo")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ResponsableFirmaImagen")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ResponsableNombreCompleto")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ResponsableNumeroDocumento")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ResponsableTipoDocumento")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SuscripcionCiudad")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("SuscripcionFecha")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Status");
+
+                    b.HasIndex("TenantId", "Version")
+                        .IsUnique();
+
+                    b.ToTable("SgSstResponsibleDesignations");
+                });
+
             modelBuilder.Entity("BackendAPI.Models.Tenant", b =>
                 {
                     b.Property<Guid>("Id")
@@ -253,6 +599,9 @@ namespace BackendAPI.Migrations
 
                     b.Property<bool>("IsPlatformOwner")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("LogoUrl")
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -442,6 +791,58 @@ namespace BackendAPI.Migrations
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("BackendAPI.Models.SgSstBudgetLineItem", b =>
+                {
+                    b.HasOne("BackendAPI.Models.SgSstBudgetPlan", "BudgetPlan")
+                        .WithMany("LineItems")
+                        .HasForeignKey("BudgetPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BudgetPlan");
+                });
+
+            modelBuilder.Entity("BackendAPI.Models.SgSstBudgetPlan", b =>
+                {
+                    b.HasOne("BackendAPI.Models.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("BackendAPI.Models.SgSstDesignationFunction", b =>
+                {
+                    b.HasOne("BackendAPI.Models.SgSstResponsibleDesignation", "Designation")
+                        .WithMany("DesignationFunctions")
+                        .HasForeignKey("DesignationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BackendAPI.Models.SgSstFunctionCatalog", "Function")
+                        .WithMany("DesignationFunctions")
+                        .HasForeignKey("FunctionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Designation");
+
+                    b.Navigation("Function");
+                });
+
+            modelBuilder.Entity("BackendAPI.Models.SgSstResponsibleDesignation", b =>
+                {
+                    b.HasOne("BackendAPI.Models.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("BackendAPI.Models.User", b =>
                 {
                     b.HasOne("BackendAPI.Models.Role", "Role")
@@ -522,6 +923,21 @@ namespace BackendAPI.Migrations
             modelBuilder.Entity("BackendAPI.Models.Role", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("BackendAPI.Models.SgSstBudgetPlan", b =>
+                {
+                    b.Navigation("LineItems");
+                });
+
+            modelBuilder.Entity("BackendAPI.Models.SgSstFunctionCatalog", b =>
+                {
+                    b.Navigation("DesignationFunctions");
+                });
+
+            modelBuilder.Entity("BackendAPI.Models.SgSstResponsibleDesignation", b =>
+                {
+                    b.Navigation("DesignationFunctions");
                 });
 
             modelBuilder.Entity("BackendAPI.Models.Tenant", b =>

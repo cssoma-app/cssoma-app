@@ -189,7 +189,8 @@ namespace BackendAPI.Tests
                 Email = "other-admin@a.com"
             });
 
-            Assert.IsType<ForbidResult>(result);
+            var forbiddenResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(403, forbiddenResult.StatusCode);
         }
 
         [Fact]
@@ -314,7 +315,8 @@ namespace BackendAPI.Tests
 
             var result = await controller.DeleteUser(otherAdmin.Id);
 
-            Assert.IsType<ForbidResult>(result);
+            var forbiddenResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(403, forbiddenResult.StatusCode);
             Assert.True(await _dbContext.Users.IgnoreQueryFilters().AnyAsync(u => u.Id == otherAdmin.Id));
         }
 

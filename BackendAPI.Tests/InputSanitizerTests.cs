@@ -8,7 +8,9 @@ namespace BackendAPI.Tests
     {
         [Theory]
         [InlineData("test<script>@csoma.com", "test@csoma.com")]
-        [InlineData("admin'OR'1'='1@ssterra.com", "adminor11@ssterra.com")]
+        // El guion y el signo igual ya NO se eliminan (regla 5 solo exige remover <, >, ", ', ; y --;
+        // un guion suelto es texto legítimo, ej. "SG-SST" — ver InputSanitizer).
+        [InlineData("admin'OR'1'='1@ssterra.com", "adminor1=1@ssterra.com")]
         [InlineData("  user;DROP;TABLE@csoma.com.co  ", "userdroptable@csoma.com.co")]
         [InlineData("CORREO_CON_MAYUSCULAS@CSOMA.COM", "correo_con_mayusculas@csoma.com")]
         public void SanitizeEmail_ShouldCleanAndNormalizeEmail(string input, string expected)

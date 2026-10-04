@@ -88,7 +88,8 @@ namespace BackendAPI.Tests
 
             var result = await controller.CreateRole(new CreateRoleRequest { DisplayName = "Auditor" });
 
-            Assert.IsType<ForbidResult>(result);
+            var forbiddenResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(403, forbiddenResult.StatusCode);
         }
 
         [Fact]

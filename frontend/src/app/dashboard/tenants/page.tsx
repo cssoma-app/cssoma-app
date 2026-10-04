@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { useNotification } from "@/context/NotificationContext"
 import { getErrorMessage } from "@/lib/utils"
+import { validateAndReadImage } from "@/lib/image-upload"
 import { Building, Plus, Calendar, Users, FileText, Lock, PlusCircle, MapPin, Phone, Mail, Edit, Trash2, Power, Send, LayoutGrid, LayoutDashboard, ShieldCheck } from "lucide-react"
 
 interface Tenant {
@@ -33,6 +34,7 @@ interface Tenant {
   tieneComiteConvivencia: boolean
   tieneBrigada: boolean
   tieneContratistas: boolean
+  logoUrl?: string | null
 }
 
 const CLASE_RIESGO_OPTIONS = ["I", "II", "III", "IV", "V"]
@@ -85,6 +87,8 @@ export default function TenantsPage() {
   const [tieneComiteConvivencia, setTieneComiteConvivencia] = useState(false)
   const [tieneBrigada, setTieneBrigada] = useState(false)
   const [tieneContratistas, setTieneContratistas] = useState(false)
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [isProcessingLogo, setIsProcessingLogo] = useState(false)
 
   // Estados Formulario de Edición
   const [editName, setEditName] = useState("")
@@ -105,6 +109,8 @@ export default function TenantsPage() {
   const [editTieneComiteConvivencia, setEditTieneComiteConvivencia] = useState(false)
   const [editTieneBrigada, setEditTieneBrigada] = useState(false)
   const [editTieneContratistas, setEditTieneContratistas] = useState(false)
+  const [editLogoUrl, setEditLogoUrl] = useState<string | null>(null)
+  const [isProcessingEditLogo, setIsProcessingEditLogo] = useState(false)
 
   const [allServices, setAllServices] = useState<ServiceOption[]>([])
   const [allDashboardCards, setAllDashboardCards] = useState<DashboardCardOption[]>([])
@@ -191,6 +197,34 @@ export default function TenantsPage() {
     setList(list.includes(id) ? list.filter((s) => s !== id) : [...list, id])
   }
 
+  const handleLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file) return
+    setIsProcessingLogo(true)
+    const result = await validateAndReadImage(file)
+    setIsProcessingLogo(false)
+    if (!result.ok) {
+      showError("Logo inválido", result.error || "No se pudo procesar la imagen.")
+      return
+    }
+    setLogoUrl(result.dataUrl || null)
+  }
+
+  const handleEditLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file) return
+    setIsProcessingEditLogo(true)
+    const result = await validateAndReadImage(file)
+    setIsProcessingEditLogo(false)
+    if (!result.ok) {
+      showError("Logo inválido", result.error || "No se pudo procesar la imagen.")
+      return
+    }
+    setEditLogoUrl(result.dataUrl || null)
+  }
+
   const handleCreateTenant = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -224,7 +258,8 @@ export default function TenantsPage() {
           tieneCopasst,
           tieneComiteConvivencia,
           tieneBrigada,
-          tieneContratistas
+          tieneContratistas,
+          logoUrl
         })
       })
 
@@ -255,6 +290,7 @@ export default function TenantsPage() {
       setTieneComiteConvivencia(false)
       setTieneBrigada(false)
       setTieneContratistas(false)
+      setLogoUrl(null)
       setIsCreateModalOpen(false)
       fetchTenants()
     } catch (err) {
@@ -284,6 +320,7 @@ export default function TenantsPage() {
     setEditTieneComiteConvivencia(tenant.tieneComiteConvivencia || false)
     setEditTieneBrigada(tenant.tieneBrigada || false)
     setEditTieneContratistas(tenant.tieneContratistas || false)
+    setEditLogoUrl(tenant.logoUrl || null)
     setIsEditModalOpen(true)
   }
 
@@ -320,7 +357,8 @@ export default function TenantsPage() {
           tieneCopasst: editTieneCopasst,
           tieneComiteConvivencia: editTieneComiteConvivencia,
           tieneBrigada: editTieneBrigada,
-          tieneContratistas: editTieneContratistas
+          tieneContratistas: editTieneContratistas,
+          logoUrl: editLogoUrl
         })
       })
 
@@ -657,6 +695,32 @@ export default function TenantsPage() {
               </div>
 
               <form onSubmit={handleCreateTenant} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logo de la Empresa</label>
+                  <div className="flex items-center gap-4">
+                    <div className="h-16 w-16 rounded-xl border border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30 shrink-0">
+                      {logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={logoUrl} alt="Vista previa del logo" className="h-full w-full object-contain" />
+                      ) : (
+                        <Building size={20} className="text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <label className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold cursor-pointer hover:bg-muted transition-colors">
+                        {isProcessingLogo ? "Procesando..." : logoUrl ? "Cambiar logo" : "Subir logo"}
+                        <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleLogoFileChange} disabled={isProcessingLogo} />
+                      </label>
+                      {logoUrl && (
+                        <button type="button" onClick={() => setLogoUrl(null)} className="ml-2 text-xs text-destructive hover:underline">
+                          Quitar
+                        </button>
+                      )}
+                      <p className="text-[11px] text-muted-foreground">PNG, JPEG o WebP · máx. 500KB · hasta 1000x1000px. Si no subes uno, se usará el nombre de la empresa como logo.</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nombre Comercial</label>
@@ -912,6 +976,32 @@ export default function TenantsPage() {
               </div>
 
               <form onSubmit={handleUpdateTenant} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logo de la Empresa</label>
+                  <div className="flex items-center gap-4">
+                    <div className="h-16 w-16 rounded-xl border border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30 shrink-0">
+                      {editLogoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={editLogoUrl} alt="Vista previa del logo" className="h-full w-full object-contain" />
+                      ) : (
+                        <Building size={20} className="text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <label className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold cursor-pointer hover:bg-muted transition-colors">
+                        {isProcessingEditLogo ? "Procesando..." : editLogoUrl ? "Cambiar logo" : "Subir logo"}
+                        <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleEditLogoFileChange} disabled={isProcessingEditLogo} />
+                      </label>
+                      {editLogoUrl && (
+                        <button type="button" onClick={() => setEditLogoUrl(null)} className="ml-2 text-xs text-destructive hover:underline">
+                          Quitar
+                        </button>
+                      )}
+                      <p className="text-[11px] text-muted-foreground">PNG, JPEG o WebP · máx. 500KB · hasta 1000x1000px. Si no subes uno, se usará el nombre de la empresa como logo.</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nombre Comercial</label>

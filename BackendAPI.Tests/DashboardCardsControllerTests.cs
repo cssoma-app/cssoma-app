@@ -124,7 +124,8 @@ namespace BackendAPI.Tests
 
             var result = await controller.GetCards();
 
-            Assert.IsType<ForbidResult>(result);
+            var forbiddenResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(403, forbiddenResult.StatusCode);
         }
 
         [Fact]
@@ -137,7 +138,8 @@ namespace BackendAPI.Tests
 
             var result = await controller.ToggleCard(_cardId);
 
-            Assert.IsType<ForbidResult>(result);
+            var forbiddenResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(403, forbiddenResult.StatusCode);
             var card = await _dbContext.DashboardCards.FirstAsync(c => c.Id == _cardId);
             Assert.True(card.IsEnabled); // no se modificó
         }

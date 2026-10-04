@@ -7,6 +7,11 @@ namespace BackendAPI.Services
         public string CoberturaCentroTrabajo { get; set; } = string.Empty;
         public string? CoberturaDetalle { get; set; }
 
+        public string OrganizacionDepartamento { get; set; } = string.Empty;
+        public string OrganizacionMunicipio { get; set; } = string.Empty;
+        public string OrganizacionNivelRiesgoArl { get; set; } = string.Empty;
+        public string OrganizacionActividadEconomica { get; set; } = string.Empty;
+
         public string ResponsableNombreCompleto { get; set; } = string.Empty;
         public string ResponsableCargo { get; set; } = string.Empty;
         public DocumentIdType ResponsableTipoDocumento { get; set; }
@@ -21,10 +26,12 @@ namespace BackendAPI.Services
         public string EmpleadorAceptaNombre { get; set; } = string.Empty;
         public string EmpleadorAceptaCargo { get; set; } = string.Empty;
         public string EmpleadorAceptaDocumento { get; set; } = string.Empty;
+        public string? EmpleadorFirmaImagen { get; set; }
 
         public string ResponsableAceptaNombre { get; set; } = string.Empty;
         public string ResponsableAceptaLicencia { get; set; } = string.Empty;
         public string ResponsableAceptaDocumento { get; set; } = string.Empty;
+        public string? ResponsableFirmaImagen { get; set; }
 
         public string SuscripcionCiudad { get; set; } = string.Empty;
         public DateTime SuscripcionFecha { get; set; }
@@ -43,9 +50,37 @@ namespace BackendAPI.Services
         public Guid Id { get; set; }
         public int Version { get; set; }
         public SgSstDesignationStatus Status { get; set; }
+
+        public string CoberturaCentroTrabajo { get; set; } = string.Empty;
+        public string? CoberturaDetalle { get; set; }
+
+        public string OrganizacionDepartamento { get; set; } = string.Empty;
+        public string OrganizacionMunicipio { get; set; } = string.Empty;
+        public string OrganizacionNivelRiesgoArl { get; set; } = string.Empty;
+        public string OrganizacionActividadEconomica { get; set; } = string.Empty;
+
         public string ResponsableNombreCompleto { get; set; } = string.Empty;
         public string ResponsableCargo { get; set; } = string.Empty;
+        public DocumentIdType ResponsableTipoDocumento { get; set; }
+        public string ResponsableNumeroDocumento { get; set; } = string.Empty;
+
         public SstCompetencyLevel NivelCompetencia { get; set; }
+        public string LicenciaSstNumero { get; set; } = string.Empty;
+        public string LicenciaSstExpedidaPor { get; set; } = string.Empty;
+        public bool Curso50HorasAprobado { get; set; }
+        public DateTime? FechaActualizacion20Horas { get; set; }
+
+        public string EmpleadorAceptaNombre { get; set; } = string.Empty;
+        public string EmpleadorAceptaCargo { get; set; } = string.Empty;
+        public string EmpleadorAceptaDocumento { get; set; } = string.Empty;
+        public string? EmpleadorFirmaImagen { get; set; }
+
+        public string ResponsableAceptaNombre { get; set; } = string.Empty;
+        public string ResponsableAceptaLicencia { get; set; } = string.Empty;
+        public string ResponsableAceptaDocumento { get; set; } = string.Empty;
+        public string? ResponsableFirmaImagen { get; set; }
+
+        public string SuscripcionCiudad { get; set; } = string.Empty;
         public DateTime SuscripcionFecha { get; set; }
         public ComplianceStatus ComplianceStatus { get; set; }
         public string? ComplianceNota { get; set; }
@@ -57,6 +92,8 @@ namespace BackendAPI.Services
     {
         public int FunctionId { get; set; }
         public string FunctionTitle { get; set; } = string.Empty;
+        public string FunctionDescription { get; set; } = string.Empty;
+        public int FunctionDisplayOrder { get; set; }
         public bool IsAccepted { get; set; }
     }
 
@@ -65,5 +102,7 @@ namespace BackendAPI.Services
         Task<ServiceResult<SgSstResponsibleDesignationDto?>> GetCurrentAsync();
         Task<ServiceResult<List<SgSstResponsibleDesignationDto>>> GetHistoryAsync();
         Task<ServiceResult<SgSstResponsibleDesignationDto>> CreateAsync(CreateSgSstResponsibleDesignationInput input, Guid createdByUserId);
+        Task<ServiceResult<SgSstResponsibleDesignationDto?>> GetDraftAsync();
+        Task<ServiceResult<SgSstResponsibleDesignationDto>> SaveDraftAsync(CreateSgSstResponsibleDesignationInput input, Guid savedByUserId);
     }
 }

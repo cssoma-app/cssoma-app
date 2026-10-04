@@ -27,6 +27,9 @@ namespace BackendAPI.Data
         public DbSet<SgSstFunctionCatalog> SgSstFunctionCatalogs { get; set; }
         public DbSet<SgSstResponsibleDesignation> SgSstResponsibleDesignations { get; set; }
         public DbSet<SgSstDesignationFunction> SgSstDesignationFunctions { get; set; }
+        public DbSet<DocumentTemplate> DocumentTemplates { get; set; }
+        public DbSet<SgSstBudgetPlan> SgSstBudgetPlans { get; set; }
+        public DbSet<SgSstBudgetLineItem> SgSstBudgetLineItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -44,6 +47,9 @@ namespace BackendAPI.Data
             modelBuilder.Entity<SgSstResponsibleDesignation>().HasIndex(d => new { d.TenantId, d.Status });
             modelBuilder.Entity<SgSstResponsibleDesignation>().HasIndex(d => new { d.TenantId, d.Version }).IsUnique();
             modelBuilder.Entity<SgSstDesignationFunction>().HasKey(df => new { df.DesignationId, df.FunctionId });
+            modelBuilder.Entity<DocumentTemplate>().HasIndex(t => t.Code).IsUnique();
+            modelBuilder.Entity<SgSstBudgetPlan>().HasIndex(p => new { p.TenantId, p.Status });
+            modelBuilder.Entity<SgSstBudgetPlan>().HasIndex(p => new { p.TenantId, p.Version }).IsUnique();
 
             // Relaciones
             modelBuilder.Entity<User>()
@@ -100,6 +106,19 @@ namespace BackendAPI.Data
                 .HasForeignKey(df => df.FunctionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // SG-SST Budget Plans (Presupuesto y Asignación de Recursos)
+            modelBuilder.Entity<SgSstBudgetPlan>()
+                .HasOne(p => p.Tenant)
+                .WithMany()
+                .HasForeignKey(p => p.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SgSstBudgetLineItem>()
+                .HasOne(li => li.BudgetPlan)
+                .WithMany(p => p.LineItems)
+                .HasForeignKey(li => li.BudgetPlanId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Global Query Filters (se evalúan en tiempo de ejecución por petición)
             modelBuilder.Entity<User>().HasQueryFilter(u => 
                 (_currentUserService != null && _currentUserService.IsSuperAdmin) || 
@@ -120,6 +139,12 @@ namespace BackendAPI.Data
             modelBuilder.Entity<SgSstResponsibleDesignation>().HasQueryFilter(d =>
                 (_currentUserService != null && _currentUserService.IsSuperAdmin) ||
                 d.TenantId == (_currentUserService != null && _currentUserService.TenantId.HasValue ? _currentUserService.TenantId.Value : Guid.Empty));
+
+            // SgSstBudgetLineItem (tabla hija) NO lleva query filter propio — se carga siempre vía
+            // Include desde SgSstBudgetPlan, que ya está filtrado por tenant.
+            modelBuilder.Entity<SgSstBudgetPlan>().HasQueryFilter(p =>
+                (_currentUserService != null && _currentUserService.IsSuperAdmin) ||
+                p.TenantId == (_currentUserService != null && _currentUserService.TenantId.HasValue ? _currentUserService.TenantId.Value : Guid.Empty));
         }
     }
 }

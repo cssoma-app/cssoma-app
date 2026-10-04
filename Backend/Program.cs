@@ -3,10 +3,22 @@ using BackendAPI.Services;
 using Serilog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using System.Text;
+using System.Text.Json.Serialization;
+
+// QuestPDF: licencia Community (gratuita) — requiere que la organización facture menos de
+// USD 1M/año según los términos de QuestPDF (https://www.questpdf.com/license/). Si SSTerra
+// Consultores supera ese umbral, esto debe cambiarse a LicenseType.Professional/Enterprise
+// con la clave correspondiente en configuración.
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+// Si algún texto ingresado por el usuario (nombre, cargo, etc.) trae un carácter cuyo glifo no
+// resuelve la fuente del servidor, que se muestre en blanco en el PDF en vez de tumbar toda la
+// generación con un 500 — un documento con un carácter faltante es mejor que ningún documento.
+QuestPDF.Settings.ThrowOnMissingTextGlyphs = false;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,16 +47,25 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
 {
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection") 
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")
         ?? "Host=localhost;Database=sst_saas;Username=postgres;Password=postgres");
     options.AddInterceptors(new TenantConnectionInterceptor(serviceProvider));
+    options.ConfigureWarnings(w =>
+    {
+        w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning);
+        w.Log(Microsoft.EntityFrameworkCore.Diagnostics.CoreEventId.NavigationBaseIncludeIgnored);
+    });
 });
 
 // Memory Cache, HttpContextAccessor, HttpClient & Controllers
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 builder.Services.AddSwaggerGen();
 
 // Register Custom Services (SOLID & DI)
@@ -62,6 +83,11 @@ builder.Services.AddScoped<IAlertService, AlertService>();
 builder.Services.AddSingleton<IResolucion0312ComplianceValidator, Resolucion0312ComplianceValidator>();
 builder.Services.AddScoped<ISgSstFunctionCatalogReader, SgSstFunctionCatalogReader>();
 builder.Services.AddScoped<ISgSstResponsibleDesignationService, SgSstResponsibleDesignationService>();
+builder.Services.AddScoped<ISgSstResponsibleDesignationPdfService, SgSstResponsibleDesignationPdfService>();
+builder.Services.AddScoped<ISgSstBudgetPlanService, SgSstBudgetPlanService>();
+builder.Services.AddScoped<ISgSstBudgetPlanPdfService, SgSstBudgetPlanPdfService>();
+builder.Services.AddScoped<ISgSstBudgetPlanExcelService, SgSstBudgetPlanExcelService>();
+builder.Services.AddScoped<IDocumentTemplateService, DocumentTemplateService>();
 builder.Services.AddScoped<Microsoft.AspNetCore.Identity.IPasswordHasher<BackendAPI.Models.User>, Microsoft.AspNetCore.Identity.PasswordHasher<BackendAPI.Models.User>>();
 
 // Configure CORS
@@ -138,9 +164,12 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
-
 app.UseCors("AllowFrontend");
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseRateLimiter();
 

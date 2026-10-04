@@ -117,7 +117,8 @@ namespace BackendAPI.Tests
 
             var result = await controller.Create(new CreateAlertRequest { RecipientUserId = otherTenantMember.Id, Title = "Aviso", Message = "Revisa esto" });
 
-            Assert.IsType<ForbidResult>(result);
+            var forbiddenResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(403, forbiddenResult.StatusCode);
             Assert.False(await _dbContext.Alerts.IgnoreQueryFilters().AnyAsync());
         }
 
@@ -144,7 +145,8 @@ namespace BackendAPI.Tests
 
             var result = await controller.Create(new CreateAlertRequest { RecipientUserId = target.Id, Title = "Aviso", Message = "Mensaje" });
 
-            Assert.IsType<ForbidResult>(result);
+            var forbiddenResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(403, forbiddenResult.StatusCode);
         }
 
         [Fact]
@@ -195,7 +197,8 @@ namespace BackendAPI.Tests
             var intruderController = BuildController();
             var result = await intruderController.Accept(alert.Id);
 
-            Assert.IsType<ForbidResult>(result);
+            var forbiddenResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(403, forbiddenResult.StatusCode);
             var unchanged = await _dbContext.Alerts.IgnoreQueryFilters().FirstAsync(a => a.Id == alert.Id);
             Assert.False(unchanged.IsAccepted);
         }
@@ -233,7 +236,8 @@ namespace BackendAPI.Tests
             var intruderController = BuildController();
             var result = await intruderController.Delete(alert.Id);
 
-            Assert.IsType<ForbidResult>(result);
+            var forbiddenResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(403, forbiddenResult.StatusCode);
             Assert.True(await _dbContext.Alerts.IgnoreQueryFilters().AnyAsync(a => a.Id == alert.Id));
         }
 
