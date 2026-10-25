@@ -4,13 +4,15 @@ import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { useNotification } from "@/context/NotificationContext"
 import { getErrorMessage } from "@/lib/utils"
-import { Building, Plus, Calendar, Users, FileText, Lock, PlusCircle, MapPin, Phone, Mail, Edit, Trash2, Power, Send } from "lucide-react"
+import { validateAndReadImage } from "@/lib/image-upload"
+import { Building, Plus, Calendar, Users, FileText, Lock, PlusCircle, MapPin, Phone, Mail, Edit, Trash2, Power, Send, LayoutGrid, LayoutDashboard, ShieldCheck } from "lucide-react"
 
 interface Tenant {
   id: string
   name: string
   razonSocial: string
   nitRuc: string
+  digitoVerificacion: string
   direccion: string
   telefono: string
   isActive: boolean
@@ -20,6 +22,37 @@ interface Tenant {
   usersCount: number
   employeesCount: number
   documentsCount: number
+  serviceIds: number[]
+  dashboardCardIds: number[]
+  ciiu: string
+  numeroTrabajadores: number
+  centrosTrabajo: number
+  claseRiesgo: string
+  arl: string
+  responsableSst: string
+  tieneCopasst: boolean
+  tieneComiteConvivencia: boolean
+  tieneBrigada: boolean
+  tieneContratistas: boolean
+  logoUrl?: string | null
+}
+
+const CLASE_RIESGO_OPTIONS = ["I", "II", "III", "IV", "V"]
+
+interface ServiceOption {
+  id: number
+  name: string
+  description: string
+  isEnabled: boolean
+}
+
+interface DashboardCardOption {
+  id: number
+  key: string
+  tabKey: string
+  name: string
+  description: string
+  isEnabled: boolean
 }
 
 export default function TenantsPage() {
@@ -37,17 +70,50 @@ export default function TenantsPage() {
   const [name, setName] = useState("")
   const [razonSocial, setRazonSocial] = useState("")
   const [nitRuc, setNitRuc] = useState("")
+  const [digitoVerificacion, setDigitoVerificacion] = useState("")
   const [direccion, setDireccion] = useState("")
   const [telefono, setTelefono] = useState("")
   const [adminEmail, setAdminEmail] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [serviceIds, setServiceIds] = useState<number[]>([])
+  const [dashboardCardIds, setDashboardCardIds] = useState<number[]>([])
+  const [ciiu, setCiiu] = useState("")
+  const [numeroTrabajadores, setNumeroTrabajadores] = useState("")
+  const [centrosTrabajo, setCentrosTrabajo] = useState("")
+  const [claseRiesgo, setClaseRiesgo] = useState("")
+  const [arl, setArl] = useState("")
+  const [responsableSst, setResponsableSst] = useState("")
+  const [tieneCopasst, setTieneCopasst] = useState(false)
+  const [tieneComiteConvivencia, setTieneComiteConvivencia] = useState(false)
+  const [tieneBrigada, setTieneBrigada] = useState(false)
+  const [tieneContratistas, setTieneContratistas] = useState(false)
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [isProcessingLogo, setIsProcessingLogo] = useState(false)
 
   // Estados Formulario de Edición
   const [editName, setEditName] = useState("")
   const [editRazonSocial, setEditRazonSocial] = useState("")
   const [editNitRuc, setEditNitRuc] = useState("")
+  const [editDigitoVerificacion, setEditDigitoVerificacion] = useState("")
   const [editDireccion, setEditDireccion] = useState("")
   const [editTelefono, setEditTelefono] = useState("")
+  const [editServiceIds, setEditServiceIds] = useState<number[]>([])
+  const [editDashboardCardIds, setEditDashboardCardIds] = useState<number[]>([])
+  const [editCiiu, setEditCiiu] = useState("")
+  const [editNumeroTrabajadores, setEditNumeroTrabajadores] = useState("")
+  const [editCentrosTrabajo, setEditCentrosTrabajo] = useState("")
+  const [editClaseRiesgo, setEditClaseRiesgo] = useState("")
+  const [editArl, setEditArl] = useState("")
+  const [editResponsableSst, setEditResponsableSst] = useState("")
+  const [editTieneCopasst, setEditTieneCopasst] = useState(false)
+  const [editTieneComiteConvivencia, setEditTieneComiteConvivencia] = useState(false)
+  const [editTieneBrigada, setEditTieneBrigada] = useState(false)
+  const [editTieneContratistas, setEditTieneContratistas] = useState(false)
+  const [editLogoUrl, setEditLogoUrl] = useState<string | null>(null)
+  const [isProcessingEditLogo, setIsProcessingEditLogo] = useState(false)
+
+  const [allServices, setAllServices] = useState<ServiceOption[]>([])
+  const [allDashboardCards, setAllDashboardCards] = useState<DashboardCardOption[]>([])
 
   const getCookie = (name: string) => {
     const value = `; ${document.cookie}`;
@@ -86,9 +152,78 @@ export default function TenantsPage() {
     }
   }
 
+  const fetchAllServices = async () => {
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5166"
+      const token = getCookie("token")
+      const response = await fetch(`${apiBaseUrl}/api/services`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }
+      })
+      if (!response.ok) return
+      const data = await response.json()
+      setAllServices(data)
+      setServiceIds(data.map((s: ServiceOption) => s.id)) // por defecto, todo habilitado al crear
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const fetchAllDashboardCards = async () => {
+    try {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5166"
+      const token = getCookie("token")
+      const response = await fetch(`${apiBaseUrl}/api/dashboard-cards`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` }
+      })
+      if (!response.ok) return
+      const data = await response.json()
+      setAllDashboardCards(data)
+      setDashboardCardIds(data.map((c: DashboardCardOption) => c.id)) // por defecto, todo habilitado al crear
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   useEffect(() => {
     fetchTenants()
+    fetchAllServices()
+    fetchAllDashboardCards()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const toggleServiceId = (id: number, list: number[], setList: (v: number[]) => void) => {
+    setList(list.includes(id) ? list.filter((s) => s !== id) : [...list, id])
+  }
+
+  const handleLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file) return
+    setIsProcessingLogo(true)
+    const result = await validateAndReadImage(file)
+    setIsProcessingLogo(false)
+    if (!result.ok) {
+      showError("Logo inválido", result.error || "No se pudo procesar la imagen.")
+      return
+    }
+    setLogoUrl(result.dataUrl || null)
+  }
+
+  const handleEditLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file) return
+    setIsProcessingEditLogo(true)
+    const result = await validateAndReadImage(file)
+    setIsProcessingEditLogo(false)
+    if (!result.ok) {
+      showError("Logo inválido", result.error || "No se pudo procesar la imagen.")
+      return
+    }
+    setEditLogoUrl(result.dataUrl || null)
+  }
 
   const handleCreateTenant = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -104,13 +239,27 @@ export default function TenantsPage() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ 
-          name, 
-          razonSocial, 
-          nitRuc, 
-          direccion, 
-          telefono, 
-          adminEmail 
+        body: JSON.stringify({
+          name,
+          razonSocial,
+          nitRuc,
+          digitoVerificacion,
+          direccion,
+          telefono,
+          adminEmail,
+          serviceIds,
+          dashboardCardIds,
+          ciiu,
+          numeroTrabajadores: numeroTrabajadores ? parseInt(numeroTrabajadores, 10) : 0,
+          centrosTrabajo: centrosTrabajo ? parseInt(centrosTrabajo, 10) : 0,
+          claseRiesgo,
+          arl,
+          responsableSst,
+          tieneCopasst,
+          tieneComiteConvivencia,
+          tieneBrigada,
+          tieneContratistas,
+          logoUrl
         })
       })
 
@@ -120,14 +269,28 @@ export default function TenantsPage() {
       }
 
       showSuccess("Empresa Registrada", `La empresa comercial "${name}" ha sido creada exitosamente. Se ha enviado la contraseña temporal al correo: ${adminEmail}`)
-      
+
       // Limpiar campos
       setName("")
       setRazonSocial("")
       setNitRuc("")
+      setDigitoVerificacion("")
       setDireccion("")
       setTelefono("")
       setAdminEmail("")
+      setServiceIds(allServices.map((s) => s.id))
+      setDashboardCardIds(allDashboardCards.map((c) => c.id))
+      setCiiu("")
+      setNumeroTrabajadores("")
+      setCentrosTrabajo("")
+      setClaseRiesgo("")
+      setArl("")
+      setResponsableSst("")
+      setTieneCopasst(false)
+      setTieneComiteConvivencia(false)
+      setTieneBrigada(false)
+      setTieneContratistas(false)
+      setLogoUrl(null)
       setIsCreateModalOpen(false)
       fetchTenants()
     } catch (err) {
@@ -142,8 +305,22 @@ export default function TenantsPage() {
     setEditName(tenant.name)
     setEditRazonSocial(tenant.razonSocial)
     setEditNitRuc(tenant.nitRuc)
+    setEditDigitoVerificacion(tenant.digitoVerificacion || "")
     setEditDireccion(tenant.direccion || "")
     setEditTelefono(tenant.telefono || "")
+    setEditServiceIds(tenant.serviceIds || [])
+    setEditDashboardCardIds(tenant.dashboardCardIds || [])
+    setEditCiiu(tenant.ciiu || "")
+    setEditNumeroTrabajadores(tenant.numeroTrabajadores ? String(tenant.numeroTrabajadores) : "")
+    setEditCentrosTrabajo(tenant.centrosTrabajo ? String(tenant.centrosTrabajo) : "")
+    setEditClaseRiesgo(tenant.claseRiesgo || "")
+    setEditArl(tenant.arl || "")
+    setEditResponsableSst(tenant.responsableSst || "")
+    setEditTieneCopasst(tenant.tieneCopasst || false)
+    setEditTieneComiteConvivencia(tenant.tieneComiteConvivencia || false)
+    setEditTieneBrigada(tenant.tieneBrigada || false)
+    setEditTieneContratistas(tenant.tieneContratistas || false)
+    setEditLogoUrl(tenant.logoUrl || null)
     setIsEditModalOpen(true)
   }
 
@@ -162,12 +339,26 @@ export default function TenantsPage() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ 
-          name: editName, 
-          razonSocial: editRazonSocial, 
-          nitRuc: editNitRuc, 
-          direccion: editDireccion, 
-          telefono: editTelefono 
+        body: JSON.stringify({
+          name: editName,
+          razonSocial: editRazonSocial,
+          nitRuc: editNitRuc,
+          digitoVerificacion: editDigitoVerificacion,
+          direccion: editDireccion,
+          telefono: editTelefono,
+          serviceIds: editServiceIds,
+          dashboardCardIds: editDashboardCardIds,
+          ciiu: editCiiu,
+          numeroTrabajadores: editNumeroTrabajadores ? parseInt(editNumeroTrabajadores, 10) : 0,
+          centrosTrabajo: editCentrosTrabajo ? parseInt(editCentrosTrabajo, 10) : 0,
+          claseRiesgo: editClaseRiesgo,
+          arl: editArl,
+          responsableSst: editResponsableSst,
+          tieneCopasst: editTieneCopasst,
+          tieneComiteConvivencia: editTieneComiteConvivencia,
+          tieneBrigada: editTieneBrigada,
+          tieneContratistas: editTieneContratistas,
+          logoUrl: editLogoUrl
         })
       })
 
@@ -345,7 +536,7 @@ export default function TenantsPage() {
                 <thead>
                   <tr className="border-b border-border/50 bg-muted/20 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     <th className="px-6 py-4">Empresa</th>
-                    <th className="px-6 py-4">NIT / RUC</th>
+                    <th className="px-6 py-4">NIT</th>
                     <th className="px-6 py-4">Contacto</th>
                     <th className="px-6 py-4 text-center">Estado</th>
                     <th className="px-6 py-4 text-center">Acciones</th>
@@ -389,7 +580,7 @@ export default function TenantsPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 text-muted-foreground font-medium">
-                            {tenant.nitRuc || "Sin NIT/RUC"}
+                            {tenant.nitRuc ? `${tenant.nitRuc}${tenant.digitoVerificacion ? "-" + tenant.digitoVerificacion : ""}` : "Sin NIT"}
                           </td>
                           <td className="px-6 py-4 text-muted-foreground text-xs">
                             {tenant.telefono && <p className="flex items-center gap-1"><Phone size={12} /> {tenant.telefono}</p>}
@@ -492,7 +683,7 @@ export default function TenantsPage() {
 
         {/* Create Company Modal */}
         {isCreateModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-10 sm:pt-16 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
             <div className="w-full max-w-lg rounded-3xl border border-border/50 bg-background p-6 shadow-2xl space-y-6 my-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -504,6 +695,32 @@ export default function TenantsPage() {
               </div>
 
               <form onSubmit={handleCreateTenant} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logo de la Empresa</label>
+                  <div className="flex items-center gap-4">
+                    <div className="h-16 w-16 rounded-xl border border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30 shrink-0">
+                      {logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={logoUrl} alt="Vista previa del logo" className="h-full w-full object-contain" />
+                      ) : (
+                        <Building size={20} className="text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <label className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold cursor-pointer hover:bg-muted transition-colors">
+                        {isProcessingLogo ? "Procesando..." : logoUrl ? "Cambiar logo" : "Subir logo"}
+                        <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleLogoFileChange} disabled={isProcessingLogo} />
+                      </label>
+                      {logoUrl && (
+                        <button type="button" onClick={() => setLogoUrl(null)} className="ml-2 text-xs text-destructive hover:underline">
+                          Quitar
+                        </button>
+                      )}
+                      <p className="text-[11px] text-muted-foreground">PNG, JPEG o WebP · máx. 500KB · hasta 1000x1000px. Si no subes uno, se usará el nombre de la empresa como logo.</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nombre Comercial</label>
@@ -530,15 +747,27 @@ export default function TenantsPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">NIT / RUC</label>
-                    <input
-                      type="text"
-                      required
-                      value={nitRuc}
-                      onChange={(e) => setNitRuc(e.target.value)}
-                      placeholder="Identificador fiscal"
-                      className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
-                    />
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">NIT</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        required
+                        value={nitRuc}
+                        onChange={(e) => setNitRuc(e.target.value)}
+                        placeholder="900985000"
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                      <span className="text-muted-foreground select-none">-</span>
+                      <input
+                        type="text"
+                        maxLength={1}
+                        value={digitoVerificacion}
+                        onChange={(e) => setDigitoVerificacion(e.target.value.replace(/\D/g, "").slice(0, 1))}
+                        placeholder="DV"
+                        aria-label="Dígito de verificación"
+                        className="block w-14 shrink-0 px-3 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm text-center"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">
@@ -566,6 +795,95 @@ export default function TenantsPage() {
 
                 <div className="border-t border-border/50 pt-4 space-y-4">
                   <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <ShieldCheck size={16} className="text-primary" />
+                    Perfil SST
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">CIIU</label>
+                      <input
+                        type="text"
+                        value={ciiu}
+                        onChange={(e) => setCiiu(e.target.value)}
+                        placeholder="Ej. 1071"
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Clase de Riesgo</label>
+                      <select
+                        value={claseRiesgo}
+                        onChange={(e) => setClaseRiesgo(e.target.value)}
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      >
+                        <option value="">Selecciona una clase</option>
+                        {CLASE_RIESGO_OPTIONS.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Número de Trabajadores</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={numeroTrabajadores}
+                        onChange={(e) => setNumeroTrabajadores(e.target.value)}
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Centros de Trabajo</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={centrosTrabajo}
+                        onChange={(e) => setCentrosTrabajo(e.target.value)}
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">ARL</label>
+                      <input
+                        type="text"
+                        value={arl}
+                        onChange={(e) => setArl(e.target.value)}
+                        placeholder="Ej. Sura, Colmena, Positiva..."
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Responsable SST</label>
+                      <input
+                        type="text"
+                        value={responsableSst}
+                        onChange={(e) => setResponsableSst(e.target.value)}
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                      <input type="checkbox" checked={tieneCopasst} onChange={(e) => setTieneCopasst(e.target.checked)} className="rounded border-border" />
+                      COPASST
+                    </label>
+                    <label className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                      <input type="checkbox" checked={tieneComiteConvivencia} onChange={(e) => setTieneComiteConvivencia(e.target.checked)} className="rounded border-border" />
+                      Comité de Convivencia
+                    </label>
+                    <label className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                      <input type="checkbox" checked={tieneBrigada} onChange={(e) => setTieneBrigada(e.target.checked)} className="rounded border-border" />
+                      Brigada
+                    </label>
+                    <label className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                      <input type="checkbox" checked={tieneContratistas} onChange={(e) => setTieneContratistas(e.target.checked)} className="rounded border-border" />
+                      Contratistas
+                    </label>
+                  </div>
+                </div>
+
+                <div className="border-t border-border/50 pt-4 space-y-4">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
                     <Mail size={16} className="text-primary" />
                     Usuario Administrador de Empresa
                   </h4>
@@ -580,6 +898,46 @@ export default function TenantsPage() {
                       placeholder="admin@correoempresa.com"
                       className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
                     />
+                  </div>
+                </div>
+
+                <div className="border-t border-border/50 pt-4 space-y-3">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <LayoutGrid size={16} className="text-primary" />
+                    Servicios Disponibles
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto rounded-xl border border-border/50 p-2">
+                    {allServices.map((s) => (
+                      <label key={s.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={serviceIds.includes(s.id)}
+                          onChange={() => toggleServiceId(s.id, serviceIds, setServiceIds)}
+                          className="rounded border-border"
+                        />
+                        {s.name}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-border/50 pt-4 space-y-3">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <LayoutDashboard size={16} className="text-primary" />
+                    Tarjetas del Dashboard
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto rounded-xl border border-border/50 p-2">
+                    {allDashboardCards.map((c) => (
+                      <label key={c.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={dashboardCardIds.includes(c.id)}
+                          onChange={() => toggleServiceId(c.id, dashboardCardIds, setDashboardCardIds)}
+                          className="rounded border-border"
+                        />
+                        {c.name}
+                      </label>
+                    ))}
                   </div>
                 </div>
 
@@ -606,7 +964,7 @@ export default function TenantsPage() {
 
         {/* Edit Company Modal */}
         {isEditModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-10 sm:pt-16 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
             <div className="w-full max-w-lg rounded-3xl border border-border/50 bg-background p-6 shadow-2xl space-y-6 my-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -618,6 +976,32 @@ export default function TenantsPage() {
               </div>
 
               <form onSubmit={handleUpdateTenant} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logo de la Empresa</label>
+                  <div className="flex items-center gap-4">
+                    <div className="h-16 w-16 rounded-xl border border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30 shrink-0">
+                      {editLogoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={editLogoUrl} alt="Vista previa del logo" className="h-full w-full object-contain" />
+                      ) : (
+                        <Building size={20} className="text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <label className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border text-xs font-semibold cursor-pointer hover:bg-muted transition-colors">
+                        {isProcessingEditLogo ? "Procesando..." : editLogoUrl ? "Cambiar logo" : "Subir logo"}
+                        <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleEditLogoFileChange} disabled={isProcessingEditLogo} />
+                      </label>
+                      {editLogoUrl && (
+                        <button type="button" onClick={() => setEditLogoUrl(null)} className="ml-2 text-xs text-destructive hover:underline">
+                          Quitar
+                        </button>
+                      )}
+                      <p className="text-[11px] text-muted-foreground">PNG, JPEG o WebP · máx. 500KB · hasta 1000x1000px. Si no subes uno, se usará el nombre de la empresa como logo.</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nombre Comercial</label>
@@ -644,15 +1028,27 @@ export default function TenantsPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">NIT / RUC</label>
-                    <input
-                      type="text"
-                      required
-                      value={editNitRuc}
-                      onChange={(e) => setEditNitRuc(e.target.value)}
-                      placeholder="Identificador fiscal"
-                      className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
-                    />
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">NIT</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        required
+                        value={editNitRuc}
+                        onChange={(e) => setEditNitRuc(e.target.value)}
+                        placeholder="900985000"
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                      <span className="text-muted-foreground select-none">-</span>
+                      <input
+                        type="text"
+                        maxLength={1}
+                        value={editDigitoVerificacion}
+                        onChange={(e) => setEditDigitoVerificacion(e.target.value.replace(/\D/g, "").slice(0, 1))}
+                        placeholder="DV"
+                        aria-label="Dígito de verificación"
+                        className="block w-14 shrink-0 px-3 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm text-center"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">
@@ -676,6 +1072,137 @@ export default function TenantsPage() {
                     placeholder="Calle, Ciudad, País"
                     className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
                   />
+                </div>
+
+                <div className="border-t border-border/50 pt-4 space-y-4">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <ShieldCheck size={16} className="text-primary" />
+                    Perfil SST
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">CIIU</label>
+                      <input
+                        type="text"
+                        value={editCiiu}
+                        onChange={(e) => setEditCiiu(e.target.value)}
+                        placeholder="Ej. 1071"
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Clase de Riesgo</label>
+                      <select
+                        value={editClaseRiesgo}
+                        onChange={(e) => setEditClaseRiesgo(e.target.value)}
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      >
+                        <option value="">Selecciona una clase</option>
+                        {CLASE_RIESGO_OPTIONS.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Número de Trabajadores</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={editNumeroTrabajadores}
+                        onChange={(e) => setEditNumeroTrabajadores(e.target.value)}
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Centros de Trabajo</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={editCentrosTrabajo}
+                        onChange={(e) => setEditCentrosTrabajo(e.target.value)}
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">ARL</label>
+                      <input
+                        type="text"
+                        value={editArl}
+                        onChange={(e) => setEditArl(e.target.value)}
+                        placeholder="Ej. Sura, Colmena, Positiva..."
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Responsable SST</label>
+                      <input
+                        type="text"
+                        value={editResponsableSst}
+                        onChange={(e) => setEditResponsableSst(e.target.value)}
+                        className="block w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                      <input type="checkbox" checked={editTieneCopasst} onChange={(e) => setEditTieneCopasst(e.target.checked)} className="rounded border-border" />
+                      COPASST
+                    </label>
+                    <label className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                      <input type="checkbox" checked={editTieneComiteConvivencia} onChange={(e) => setEditTieneComiteConvivencia(e.target.checked)} className="rounded border-border" />
+                      Comité de Convivencia
+                    </label>
+                    <label className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                      <input type="checkbox" checked={editTieneBrigada} onChange={(e) => setEditTieneBrigada(e.target.checked)} className="rounded border-border" />
+                      Brigada
+                    </label>
+                    <label className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                      <input type="checkbox" checked={editTieneContratistas} onChange={(e) => setEditTieneContratistas(e.target.checked)} className="rounded border-border" />
+                      Contratistas
+                    </label>
+                  </div>
+                </div>
+
+                <div className="border-t border-border/50 pt-4 space-y-3">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <LayoutGrid size={16} className="text-primary" />
+                    Servicios Disponibles
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto rounded-xl border border-border/50 p-2">
+                    {allServices.map((s) => (
+                      <label key={s.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={editServiceIds.includes(s.id)}
+                          onChange={() => toggleServiceId(s.id, editServiceIds, setEditServiceIds)}
+                          className="rounded border-border"
+                        />
+                        {s.name}
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Quitar un servicio también lo quita a todos los usuarios de la empresa que lo tuvieran habilitado.</p>
+                </div>
+
+                <div className="border-t border-border/50 pt-4 space-y-3">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <LayoutDashboard size={16} className="text-primary" />
+                    Tarjetas del Dashboard
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto rounded-xl border border-border/50 p-2">
+                    {allDashboardCards.map((c) => (
+                      <label key={c.id} className="flex items-center gap-2 text-sm px-3 py-2 rounded-xl border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={editDashboardCardIds.includes(c.id)}
+                          onChange={() => toggleServiceId(c.id, editDashboardCardIds, setEditDashboardCardIds)}
+                          className="rounded border-border"
+                        />
+                        {c.name}
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Quitar una tarjeta también la quita a todos los usuarios de la empresa que la tuvieran habilitada.</p>
                 </div>
 
                 <div className="flex gap-3 pt-4">

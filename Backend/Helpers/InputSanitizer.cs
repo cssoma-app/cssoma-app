@@ -6,7 +6,11 @@ namespace BackendAPI.Helpers
 {
     public static class InputSanitizer
     {
-        private static readonly Regex InjectionRegex = new Regex(@"[<>'""`;=\-]", RegexOptions.Compiled);
+        // Caracteres peligrosos según Regla 5 (AGENTS.md): <, >, ", ', ; y el comentario SQL --.
+        // OJO: un guion suelto ("-") NO es peligroso y es parte legítima de texto normal
+        // (ej. "SG-SST", "900.123.456-7"); solo se remueve la secuencia "--" (comentario SQL).
+        private static readonly Regex InjectionRegex = new Regex(@"[<>'""`;]", RegexOptions.Compiled);
+        private static readonly Regex SqlLineCommentRegex = new Regex(@"--", RegexOptions.Compiled);
         private static readonly Regex TagRegex = new Regex(@"<[^>]*>", RegexOptions.Compiled);
         private static readonly Regex ScriptBlockRegex = new Regex(@"<script\b[^>]*>[\s\S]*?</script\s*>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex SqlBlockCommentRegex = new Regex(@"/\*.*?\*/", RegexOptions.Compiled | RegexOptions.Singleline);
@@ -28,9 +32,28 @@ namespace BackendAPI.Helpers
 
             // 3. Limpieza de caracteres de inyección
             sanitized = InjectionRegex.Replace(sanitized, string.Empty);
+            sanitized = SqlLineCommentRegex.Replace(sanitized, string.Empty);
 
             // 4. Forzar minúsculas para correos consistente
             return sanitized.ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// Sanitiza texto libre ingresado por el usuario (ej. nombres) aplicando
+        /// normalización Unicode FormC y removiendo etiquetas/caracteres de inyección,
+        /// sin forzar minúsculas.
+        /// </summary>
+        public static string SanitizeText(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return string.Empty;
+
+            var normalized = text.Normalize(NormalizationForm.FormC).Trim();
+            var sanitized = TagRegex.Replace(normalized, string.Empty);
+            sanitized = InjectionRegex.Replace(sanitized, string.Empty);
+            sanitized = SqlLineCommentRegex.Replace(sanitized, string.Empty);
+
+            return sanitized;
         }
 
         /// <summary>
@@ -57,6 +80,12 @@ namespace BackendAPI.Helpers
 
             // 5. Eliminar comentarios de línea SQL (--)
             sanitized = sanitized.Replace("--", string.Empty);
+
+            // 6. Eliminar caracteres peligrosos sueltos (<, >, ;, `)
+            sanitized = sanitized.Replace("<", string.Empty)
+                                 .Replace(">", string.Empty)
+                                 .Replace(";", string.Empty)
+                                 .Replace("`", string.Empty);
 
             return sanitized;
         }

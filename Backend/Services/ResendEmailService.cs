@@ -87,7 +87,7 @@ namespace BackendAPI.Services
             }
         }
 
-        public async Task SendWelcomeEmailAsync(string email, string tempPassword, string companyName)
+        public async Task SendWelcomeEmailAsync(string email, string tempPassword, string companyName, string roleName)
         {
             var apiKey = _configuration["Resend:ApiKey"];
             var fromEmail = _configuration["Resend:FromEmail"] ?? "onboarding@resend.dev";
@@ -120,8 +120,8 @@ namespace BackendAPI.Services
                     subject = "Bienvenido a SSTerra CSOMA - Credenciales de Acceso",
                     html = $"<div style='font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;'>" +
                            $"<h2 style='color: #10b981;'>¡Bienvenido a SSTerra CSOMA!</h2>" +
-                           $"<p>Tu empresa <strong>{companyName}</strong> ha sido registrada exitosamente en nuestra plataforma multi-empresa.</p>" +
-                           $"<p>Se te ha asignado el rol de <strong>Administrador de Empresa</strong>. Tus credenciales de acceso inicial son:</p>" +
+                           $"<p>Has sido registrado en la plataforma de <strong>{companyName}</strong>.</p>" +
+                           $"<p>Se te ha asignado el rol de <strong>{roleName}</strong>. Tus credenciales de acceso inicial son:</p>" +
                            $"<div style='background-color: #f1f5f9; padding: 15px; border-radius: 12px; margin: 20px 0;'>" +
                            $"<p style='margin: 5px 0;'><strong>Usuario (Email):</strong> {email}</p>" +
                            $"<p style='margin: 5px 0;'><strong>Contraseña Temporal:</strong> <span style='font-family: monospace; font-size: 16px; font-weight: bold; background-color: #e2e8f0; padding: 2px 6px; border-radius: 4px;'>{tempPassword}</span></p>" +

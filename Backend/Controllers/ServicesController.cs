@@ -1,53 +1,40 @@
-using System.Linq;
 using System.Threading.Tasks;
-using BackendAPI.Data;
-using BackendAPI.Models;
+using BackendAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace BackendAPI.Controllers
 {
-    [Authorize(Roles = "SuperAdmin")]
+    // Controller delgado: toda la lógica de negocio vive en IServicesService (Regla 2, AGENTS.md).
+    [Authorize(Roles = "SuperAdmin,Admin")]
     [ApiController]
     [Route("api/services")]
     public class ServicesController : ControllerBase
     {
-        private readonly ApplicationDbContext _dbContext;
+        private readonly IServicesService _servicesService;
 
-        public ServicesController(ApplicationDbContext dbContext)
+        public ServicesController(IServicesService servicesService)
         {
-            _dbContext = dbContext;
+            _servicesService = servicesService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetServices()
         {
-            var services = await _dbContext.SassServices
-                .OrderBy(s => s.Id)
-                .ToListAsync();
-
-            return Ok(services);
+            var result = await _servicesService.GetAllServicesAsync();
+            return this.ToActionResult(result);
         }
 
         [HttpPost("toggle/{id}")]
         public async Task<IActionResult> ToggleService(int id)
         {
-            var service = await _dbContext.SassServices.FindAsync(id);
-            if (service == null)
+            var result = await _servicesService.ToggleServiceAsync(id);
+            if (result.Outcome != ServiceOutcome.Ok)
             {
-                return NotFound(new { Message = "Servicio no encontrado." });
+                return this.ToActionResult(result);
             }
 
-            service.IsEnabled = !service.IsEnabled;
-            _dbContext.SassServices.Update(service);
-            await _dbContext.SaveChangesAsync();
-
-            return Ok(new
-            {
-                Message = $"Servicio '{service.Name}' {(service.IsEnabled ? "habilitado" : "deshabilitado")} exitosamente.",
-                Service = service
-            });
+            return Ok(new { Message = result.Message, Service = result.Data });
         }
     }
 }
