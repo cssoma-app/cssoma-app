@@ -27,6 +27,8 @@ namespace BackendAPI.Tests
         [InlineData("pass<script>alert('xss')</script>word", "password")]
         [InlineData("adminPassword-- Comment", "adminPassword Comment")]
         [InlineData("myPass/*comment*/word", "myPassword")]
+        [InlineData("my-safe-pass-word123!", "my-safe-pass-word123!")]
+        [InlineData("pass<word>test;123`", "passtest123")]
         public void SanitizePassword_ShouldRemoveDangerousSqlAndHtmlTags(string input, string expected)
         {
             // Act

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft, Mail, ShieldCheck, AlertCircle, ArrowRight, Lock, Eye, EyeOff, KeyRound } from "lucide-react"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { getErrorMessage } from "@/lib/utils"
+import { sanitizeEmail, sanitizePassword } from "@/lib/sanitizer"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -31,8 +32,8 @@ export default function LoginPage() {
     setIsSuccess(false)
 
     try {
-      const sanitizedEmail = email.normalize("NFC").trim().toLowerCase().replace(/[<>'";`\-]/g, "")
-      const sanitizedPassword = password.normalize("NFC").replace(/[<>;`]/g, "")
+      const sanitizedEmail = sanitizeEmail(email)
+      const sanitizedPassword = sanitizePassword(password)
 
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5166"
       
@@ -44,6 +45,9 @@ export default function LoginPage() {
         })
 
         if (!response.ok) {
+          if (response.status === 429) {
+            throw new Error("Has realizado demasiados intentos. Por seguridad, espera 1 minuto antes de volver a intentar.")
+          }
           const errorData = await response.json().catch(() => ({}))
           throw new Error(errorData.message || "Correo electrónico o contraseña incorrectos.")
         }
@@ -65,6 +69,9 @@ export default function LoginPage() {
         })
 
         if (!response.ok) {
+          if (response.status === 429) {
+            throw new Error("Has realizado demasiados intentos. Por seguridad, espera 1 minuto antes de volver a solicitar un código.")
+          }
           const errorData = await response.json().catch(() => ({}))
           throw new Error(errorData.message || "Este correo electrónico no está registrado en el sistema. Solicita acceso a tu asesor de CSOMA.")
         }
@@ -89,6 +96,7 @@ export default function LoginPage() {
     setErrorMessage("")
 
     try {
+      const sanitizedNewPassword = sanitizePassword(newPassword)
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5166"
       const response = await fetch(`${apiBaseUrl}/api/auth/change-temp-password`, {
         method: "PUT",
@@ -96,7 +104,7 @@ export default function LoginPage() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${tempToken}`
         },
-        body: JSON.stringify({ newPassword: newPassword.normalize("NFC").replace(/[<>;`]/g, "") })
+        body: JSON.stringify({ newPassword: sanitizedNewPassword })
       })
 
       if (!response.ok) {

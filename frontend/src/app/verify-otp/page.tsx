@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft, ShieldCheck, RefreshCw, CheckCircle2, Lock, Eye, EyeOff, AlertTriangle } from "lucide-react"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { getErrorMessage } from "@/lib/utils"
+import { sanitizeEmail, sanitizePassword } from "@/lib/sanitizer"
 
 export default function VerifyOtpPage() {
   const router = useRouter()
@@ -41,14 +42,18 @@ export default function VerifyOtpPage() {
     setErrorMessage("")
 
     try {
+      const sanitizedEmail = sanitizeEmail(email)
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5166"
       const response = await fetch(`${apiBaseUrl}/api/auth/verify-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code: codeToVerify })
+        body: JSON.stringify({ email: sanitizedEmail, code: codeToVerify })
       })
 
       if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error("Has realizado demasiados intentos. Por seguridad, espera 1 minuto antes de reintentar.")
+        }
         const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.message || "Código de seguridad incorrecto o expirado.")
       }
@@ -120,14 +125,19 @@ export default function VerifyOtpPage() {
     if (timer === 0) {
       setTimer(59)
       try {
+        const sanitizedEmail = sanitizeEmail(email)
         const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5166"
         const response = await fetch(`${apiBaseUrl}/api/auth/request-code`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email })
+          body: JSON.stringify({ email: sanitizedEmail })
         })
 
         if (!response.ok) {
+          if (response.status === 429) {
+            alert("Has realizado demasiados intentos. Por seguridad, espera 1 minuto antes de solicitar otro código.")
+            return
+          }
           throw new Error("No se pudo reenviar el código.")
         }
         alert("Se ha enviado un nuevo código de seguridad a tu correo electrónico.")
@@ -149,29 +159,22 @@ export default function VerifyOtpPage() {
   }
 
   const handlePasswordChange = (val: string) => {
-    // 1. Normalización Unicode NFC
-    let normalized = val.normalize("NFC")
-    
-    // 2. Sanitización contra Inyección de Scripts/HTML/SQL básico
-    const injectionPattern = /[<>'";`\-]/g
-    if (injectionPattern.test(normalized)) {
-      setInjectionAlert("Carácter especial bloqueado por seguridad para prevenir inyecciones.")
-      normalized = normalized.replace(injectionPattern, "")
+    // Alerta si el usuario intenta ingresar caracteres peligrosos de inyección (<, >, ;, `, comentarios SQL)
+    const dangerousPattern = /[<>;`]|--/g
+    if (dangerousPattern.test(val)) {
+      setInjectionAlert("Carácter o secuencia bloqueada por seguridad (<, >, ;, `, --).")
     } else {
       setInjectionAlert("")
     }
 
-    setPassword(normalized)
-    setPasswordStrength(evaluatePasswordStrength(normalized))
+    const sanitized = sanitizePassword(val)
+    setPassword(sanitized)
+    setPasswordStrength(evaluatePasswordStrength(sanitized))
   }
 
   const handleConfirmPasswordChange = (val: string) => {
-    let normalized = val.normalize("NFC")
-    const injectionPattern = /[<>'";`\-]/g
-    if (injectionPattern.test(normalized)) {
-      normalized = normalized.replace(injectionPattern, "")
-    }
-    setConfirmPassword(normalized)
+    const sanitized = sanitizePassword(val)
+    setConfirmPassword(sanitized)
   }
 
   const getStrengthBarProperties = () => {
@@ -202,14 +205,20 @@ export default function VerifyOtpPage() {
 
     try {
       const fullCode = code.join("")
+      const sanitizedEmail = sanitizeEmail(email)
+      const sanitizedPassword = sanitizePassword(password)
+
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5166"
       const response = await fetch(`${apiBaseUrl}/api/auth/set-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code: fullCode, password })
+        body: JSON.stringify({ email: sanitizedEmail, code: fullCode, password: sanitizedPassword })
       })
 
       if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error("Has realizado demasiados intentos. Por seguridad, espera 1 minuto antes de reintentar.")
+        }
         const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.message || "Error al registrar la contraseña.")
       }

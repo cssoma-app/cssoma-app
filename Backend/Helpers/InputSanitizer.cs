@@ -81,6 +81,12 @@ namespace BackendAPI.Helpers
             // 5. Eliminar comentarios de línea SQL (--)
             sanitized = sanitized.Replace("--", string.Empty);
 
+            // 6. Eliminar caracteres peligrosos sueltos (<, >, ;, `)
+            sanitized = sanitized.Replace("<", string.Empty)
+                                 .Replace(">", string.Empty)
+                                 .Replace(";", string.Empty)
+                                 .Replace("`", string.Empty);
+
             return sanitized;
         }
     }
